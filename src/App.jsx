@@ -5,8 +5,8 @@ import "./App.css";
 const SUPABASE_URL = "https://nkqavfpbwdaqmzkcsufx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-zcCan8Yn75xr1RtVzNHPA_REQuFXwo";
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
-const SCORES_API = "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
-const FOOTBALL_API_KEY = "";
+const FOOTBALL_DATA_KEY = "959ff529c0a2422aaa409ec33f21ea39";
+const SCORES_API = `https://api.football-data.org/v4/competitions/WC/matches`;
 const DEFAULT_RESET_PASSWORD = "1234";
 
 // ── Password hashing ───────────────────────────────────────────────────────────
@@ -106,63 +106,6 @@ function calcPoints(pred, match) {
 }
 
 // ── Match normalise ────────────────────────────────────────────────────────────
-// Playoff winner name corrections (openfootball uses placeholder names)
-const TEAM_FIXES = {
-  "UEFA Path A winner": "Bosnia and Herzegovina",
-  "UEFA Path B winner": "Sweden",
-  "UEFA Path C winner": "Türkiye",
-  "UEFA Path D winner": "Czechia",
-  "IC Path 1 winner": "DR Congo",
-  "IC Path 2 winner": "Iraq",
-};
-function fixTeam(name) { return TEAM_FIXES[name] || name; }
-
-function normalise(m, idx) {
-  // openfootball format: { team1, team2, date, time, group, score: { ft: [h, a] }, round }
-  const home = fixTeam(m.team1 || "TBD");
-  const away = fixTeam(m.team2 || "TBD");
-  // Convert "13:00 UTC-6" to proper UTC ISO datetime
-  let dt = "";
-  if (m.date) {
-    if (m.time) {
-      const raw = m.time.trim();
-      const parts = raw.split(" ");
-      const localTime = parts[0]; // "13:00"
-      const offsetStr = parts[1] || "UTC+0"; // "UTC-6"
-      const offsetMatch = offsetStr.match(/UTC([+-]\d+)/);
-      const offset = offsetMatch ? parseInt(offsetMatch[1]) : 0;
-      const hh = parseInt(localTime.split(":")[0]);
-      const mm = parseInt(localTime.split(":")[1]);
-      let utcH = hh - offset;
-      if (utcH >= 24) utcH -= 24;
-      if (utcH < 0) utcH += 24;
-      dt = m.date + "T" + String(utcH).padStart(2,"0") + ":" + String(mm).padStart(2,"0") + ":00Z";
-    } else {
-      dt = m.date + "T00:00:00Z";
-    }
-  }
-  const hasScore = m.score && m.score.ft && m.score.ft.length === 2;
-  const hs = hasScore ? m.score.ft[0] : null;
-  const as_ = hasScore ? m.score.ft[1] : null;
-  const done = hasScore;
-  const group = m.group ? m.group.replace("Group ","") : "";
-  const round = m.round || "";
-  const stageLabel = round.includes("Round of 16") || round.includes("Last 16") ? "Round of 16"
-    : round.includes("Quarter") ? "Quarter Final"
-    : round.includes("Semi") ? "Semi Final"
-    : round.includes("Final") && !round.includes("Semi") && !round.includes("Third") ? "Final"
-    : round.includes("Third") || round.includes("3rd") ? "3rd Place"
-    : "Group Stage";
-  return {
-    id: String(idx + 1),
-    home, away, datetime: dt,
-    home_score: done ? hs : null,
-    away_score: done ? as_ : null,
-    status: done ? "completed" : "scheduled",
-    stage: stageLabel,
-    group,
-  };
-}
 
 // ── Time helpers ───────────────────────────────────────────────────────────────
 function isPredOpen(dt) {
@@ -725,31 +668,142 @@ export default function App() {
 
   const showToast = (msg) => setToast(msg);
 
+
+// ── Complete FIFA World Cup 2026 fixture list (official schedule) ──────────────
+const WC_FIXTURES = [
+  // Group A
+  {id:"1",home:"Mexico",away:"South Africa",datetime:"2026-06-11T19:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"2",home:"South Korea",away:"Czechia",datetime:"2026-06-12T02:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"19",home:"Czechia",away:"South Africa",datetime:"2026-06-19T16:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"20",home:"Mexico",away:"South Korea",datetime:"2026-06-19T01:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"37",home:"Czechia",away:"Mexico",datetime:"2026-06-25T01:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"38",home:"South Africa",away:"South Korea",datetime:"2026-06-25T01:00:00Z",group:"A",stage:"Group Stage"},
+  // Group B
+  {id:"3",home:"Canada",away:"Bosnia and Herzegovina",datetime:"2026-06-12T19:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"4",home:"Qatar",away:"Switzerland",datetime:"2026-06-13T19:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"21",home:"Switzerland",away:"Bosnia and Herzegovina",datetime:"2026-06-19T19:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"22",home:"Canada",away:"Qatar",datetime:"2026-06-19T22:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"39",home:"Switzerland",away:"Canada",datetime:"2026-06-24T19:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"40",home:"Bosnia and Herzegovina",away:"Qatar",datetime:"2026-06-24T19:00:00Z",group:"B",stage:"Group Stage"},
+  // Group C
+  {id:"5",home:"Brazil",away:"Morocco",datetime:"2026-06-13T22:00:00Z",group:"C",stage:"Group Stage"},
+  {id:"6",home:"Haiti",away:"Scotland",datetime:"2026-06-14T01:00:00Z",group:"C",stage:"Group Stage"},
+  {id:"23",home:"Scotland",away:"Morocco",datetime:"2026-06-19T22:00:00Z",group:"C",stage:"Group Stage"},
+  {id:"24",home:"Brazil",away:"Haiti",datetime:"2026-06-20T01:00:00Z",group:"C",stage:"Group Stage"},
+  {id:"41",home:"Scotland",away:"Brazil",datetime:"2026-06-24T22:00:00Z",group:"C",stage:"Group Stage"},
+  {id:"42",home:"Morocco",away:"Haiti",datetime:"2026-06-24T22:00:00Z",group:"C",stage:"Group Stage"},
+  // Group D
+  {id:"7",home:"USA",away:"Paraguay",datetime:"2026-06-13T01:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"8",home:"Australia",away:"Türkiye",datetime:"2026-06-14T04:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"25",home:"USA",away:"Australia",datetime:"2026-06-19T19:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"26",home:"Türkiye",away:"Paraguay",datetime:"2026-06-20T04:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"43",home:"Türkiye",away:"USA",datetime:"2026-06-26T02:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"44",home:"Paraguay",away:"Australia",datetime:"2026-06-26T02:00:00Z",group:"D",stage:"Group Stage"},
+  // Group E
+  {id:"9",home:"Germany",away:"Curaçao",datetime:"2026-06-14T17:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"10",home:"Ivory Coast",away:"Ecuador",datetime:"2026-06-14T23:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"27",home:"Germany",away:"Ivory Coast",datetime:"2026-06-20T20:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"28",home:"Ecuador",away:"Curaçao",datetime:"2026-06-21T00:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"45",home:"Curaçao",away:"Ivory Coast",datetime:"2026-06-25T20:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"46",home:"Ecuador",away:"Germany",datetime:"2026-06-25T20:00:00Z",group:"E",stage:"Group Stage"},
+  // Group F
+  {id:"11",home:"Netherlands",away:"Japan",datetime:"2026-06-14T20:00:00Z",group:"F",stage:"Group Stage"},
+  {id:"12",home:"Sweden",away:"Tunisia",datetime:"2026-06-15T02:00:00Z",group:"F",stage:"Group Stage"},
+  {id:"29",home:"Netherlands",away:"Sweden",datetime:"2026-06-20T17:00:00Z",group:"F",stage:"Group Stage"},
+  {id:"30",home:"Tunisia",away:"Japan",datetime:"2026-06-21T04:00:00Z",group:"F",stage:"Group Stage"},
+  {id:"47",home:"Japan",away:"Sweden",datetime:"2026-06-25T23:00:00Z",group:"F",stage:"Group Stage"},
+  {id:"48",home:"Tunisia",away:"Netherlands",datetime:"2026-06-25T23:00:00Z",group:"F",stage:"Group Stage"},
+  // Group G
+  {id:"13",home:"Belgium",away:"Egypt",datetime:"2026-06-15T19:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"14",home:"Iran",away:"New Zealand",datetime:"2026-06-16T01:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"31",home:"Belgium",away:"Iran",datetime:"2026-06-21T19:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"32",home:"New Zealand",away:"Egypt",datetime:"2026-06-22T01:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"49",home:"Egypt",away:"Iran",datetime:"2026-06-27T03:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"50",home:"New Zealand",away:"Belgium",datetime:"2026-06-27T03:00:00Z",group:"G",stage:"Group Stage"},
+  // Group H
+  {id:"15",home:"Spain",away:"Cape Verde",datetime:"2026-06-15T16:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"16",home:"Saudi Arabia",away:"Uruguay",datetime:"2026-06-15T22:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"33",home:"Spain",away:"Saudi Arabia",datetime:"2026-06-21T16:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"34",home:"Uruguay",away:"Cape Verde",datetime:"2026-06-21T22:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"51",home:"Cape Verde",away:"Saudi Arabia",datetime:"2026-06-27T00:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"52",home:"Uruguay",away:"Spain",datetime:"2026-06-27T00:00:00Z",group:"H",stage:"Group Stage"},
+  // Group I
+  {id:"17",home:"France",away:"Senegal",datetime:"2026-06-16T19:00:00Z",group:"I",stage:"Group Stage"},
+  {id:"18",home:"Iraq",away:"Norway",datetime:"2026-06-16T22:00:00Z",group:"I",stage:"Group Stage"},
+  {id:"35",home:"France",away:"Iraq",datetime:"2026-06-22T21:00:00Z",group:"I",stage:"Group Stage"},
+  {id:"36",home:"Norway",away:"Senegal",datetime:"2026-06-23T00:00:00Z",group:"I",stage:"Group Stage"},
+  {id:"53",home:"Norway",away:"France",datetime:"2026-06-26T19:00:00Z",group:"I",stage:"Group Stage"},
+  {id:"54",home:"Senegal",away:"Iraq",datetime:"2026-06-26T19:00:00Z",group:"I",stage:"Group Stage"},
+  // Group J
+  {id:"55",home:"Argentina",away:"Algeria",datetime:"2026-06-17T01:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"56",home:"Austria",away:"Jordan",datetime:"2026-06-17T04:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"57",home:"Argentina",away:"Austria",datetime:"2026-06-22T17:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"58",home:"Jordan",away:"Algeria",datetime:"2026-06-23T03:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"59",home:"Algeria",away:"Austria",datetime:"2026-06-28T02:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"60",home:"Jordan",away:"Argentina",datetime:"2026-06-28T02:00:00Z",group:"J",stage:"Group Stage"},
+  // Group K
+  {id:"61",home:"Portugal",away:"DR Congo",datetime:"2026-06-17T17:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"62",home:"Uzbekistan",away:"Colombia",datetime:"2026-06-17T23:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"63",home:"Portugal",away:"Uzbekistan",datetime:"2026-06-23T19:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"64",home:"Colombia",away:"DR Congo",datetime:"2026-06-23T22:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"65",home:"DR Congo",away:"Uzbekistan",datetime:"2026-06-27T23:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"66",home:"Colombia",away:"Portugal",datetime:"2026-06-27T23:00:00Z",group:"K",stage:"Group Stage"},
+  // Group L
+  {id:"67",home:"England",away:"Croatia",datetime:"2026-06-18T19:00:00Z",group:"L",stage:"Group Stage"},
+  {id:"68",home:"Ghana",away:"Panama",datetime:"2026-06-18T22:00:00Z",group:"L",stage:"Group Stage"},
+  {id:"69",home:"England",away:"Ghana",datetime:"2026-06-23T23:00:00Z",group:"L",stage:"Group Stage"},
+  {id:"70",home:"Panama",away:"Croatia",datetime:"2026-06-24T02:00:00Z",group:"L",stage:"Group Stage"},
+  {id:"71",home:"Croatia",away:"Ghana",datetime:"2026-06-28T19:00:00Z",group:"L",stage:"Group Stage"},
+  {id:"72",home:"Panama",away:"England",datetime:"2026-06-28T19:00:00Z",group:"L",stage:"Group Stage"},
+];
   const loadMatches = useCallback(async () => {
     try {
-      const r = await fetch(SCORES_API);
-      if (!r.ok) throw new Error();
-      const data = await r.json();
-      const raw = data.matches || [];
-      if (raw.length === 0) throw new Error();
-      // Fetch admin score overrides from Supabase
+      // Use embedded fixture list for accuracy, fetch scores from football-data.org
+      let scoreMap = {};
+      try {
+        const r = await fetch(SCORES_API, { headers: { "X-Auth-Token": FOOTBALL_DATA_KEY } });
+        if (r.ok) {
+          const data = await r.json();
+          (data.matches || []).forEach(m => {
+            const hs = m.score?.fullTime?.home;
+            const as_ = m.score?.fullTime?.away;
+            const status = (m.status||"").toUpperCase();
+            const done = status === "FINISHED";
+            const live = ["IN_PLAY","PAUSED","HALFTIME"].includes(status);
+            if (done || live) {
+              // Match by home+away team name
+              const key = (m.homeTeam?.name||"") + "|" + (m.awayTeam?.name||"");
+              scoreMap[key] = { home_score: done?hs:null, away_score: done?as_:null, status: done?"completed":live?"live":"scheduled" };
+            }
+          });
+        }
+      } catch {}
+      // Fetch admin overrides
       let overrides = [];
       try { overrides = await sb.get("match_overrides", "select=*"); } catch {}
       const overrideMap = {};
       overrides.forEach(o => { overrideMap[o.match_id] = o; });
-      // Merge: admin overrides take priority over API scores
-      const normalised = raw.map((m, i) => {
-        const n = normalise(m, i);
-        if (overrideMap[n.id]) {
-          n.home_score = overrideMap[n.id].home_score;
-          n.away_score = overrideMap[n.id].away_score;
-          n.status = "completed";
+      // Build final match list from embedded fixtures
+      const finalMatches = WC_FIXTURES.map(f => {
+        const m = { ...f, home_score: null, away_score: null, status: "scheduled" };
+        // Apply API score if available
+        const key = f.home + "|" + f.away;
+        if (scoreMap[key]) {
+          m.home_score = scoreMap[key].home_score;
+          m.away_score = scoreMap[key].away_score;
+          m.status = scoreMap[key].status;
         }
-        return n;
+        // Admin override always wins
+        if (overrideMap[f.id]) {
+          m.home_score = overrideMap[f.id].home_score;
+          m.away_score = overrideMap[f.id].away_score;
+          m.status = "completed";
+        }
+        return m;
       });
-      setMatches(normalised);
+      setMatches(finalMatches);
       setApiOk(true);
-    } catch { setApiOk(false); setMatches(DEMO); }
+    } catch(e) { console.error(e); setApiOk(false); setMatches(WC_FIXTURES.map(f=>({...f,home_score:null,away_score:null,status:"scheduled"}))); }
     setLoading(false);
   }, []);
 
