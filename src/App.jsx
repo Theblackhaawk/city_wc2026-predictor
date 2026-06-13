@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import "./App.css";
- 
+
 // ── Config ─────────────────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://nkqavfpbwdaqmzkcsufx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-zcCan8Yn75xr1RtVzNHPA_REQuFXwo";
@@ -8,7 +8,7 @@ const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
 const SCORES_API = "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
 const FOOTBALL_API_KEY = "";
 const DEFAULT_RESET_PASSWORD = "1234";
- 
+
 // ── Password hashing ───────────────────────────────────────────────────────────
 async function hashPassword(password) {
   const msgBuffer = new TextEncoder().encode(password + "wc2026_salt_citybank");
@@ -16,7 +16,7 @@ async function hashPassword(password) {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
- 
+
 // ── Supabase client ────────────────────────────────────────────────────────────
 const sb = {
   async query(path, opts = {}) {
@@ -39,7 +39,7 @@ const sb = {
   patch: (t, p, b) => sb.query(`${t}?${p}`, { method: "PATCH", body: JSON.stringify(b), prefer: "return=representation" }),
   upsert: (t, b) => sb.query(t, { method: "POST", body: JSON.stringify(b), prefer: "resolution=merge-duplicates,return=representation" }),
 };
- 
+
 // ── Device fingerprint ─────────────────────────────────────────────────────────
 function getDeviceId() {
   let id = localStorage.getItem("wc_device_id");
@@ -65,17 +65,17 @@ function parseBrowser(ua) {
   if (/Safari/.test(ua)) return "Safari";
   return "Unknown";
 }
- 
+
 // ── Session ────────────────────────────────────────────────────────────────────
 const getSession = () => { try { return JSON.parse(localStorage.getItem("wc_session")); } catch { return null; } };
 const setSession = (s) => localStorage.setItem("wc_session", JSON.stringify(s));
 const clearSession = () => localStorage.removeItem("wc_session");
- 
+
 // ── Audit ──────────────────────────────────────────────────────────────────────
 async function audit(empId, action, detail = "") {
   try { await sb.post("audit_log", { emp_id: empId, action, detail }); } catch {}
 }
- 
+
 // ── Flags ──────────────────────────────────────────────────────────────────────
 const FLAGS = {
   "Mexico":"🇲🇽","USA":"🇺🇸","United States":"🇺🇸","Canada":"🇨🇦","Argentina":"🇦🇷",
@@ -92,7 +92,7 @@ const FLAGS = {
   "Bosnia and Herzegovina":"🇧🇦","Czechia":"🇨🇿","Cape Verde":"🇨🇻",
 };
 const flag = (n) => FLAGS[n] || "🏳️";
- 
+
 // ── Scoring ────────────────────────────────────────────────────────────────────
 function scoreOutcome(h, a) { return h > a ? "home" : a > h ? "away" : "draw"; }
 function calcPoints(pred, match) {
@@ -104,7 +104,7 @@ function calcPoints(pred, match) {
   if (parseInt(pred.home_score) === hs && parseInt(pred.away_score) === as) pts++;
   return pts;
 }
- 
+
 // ── Match normalise ────────────────────────────────────────────────────────────
 function normalise(m, idx) {
   // openfootball format: { team1, team2, date, time, group, score: { ft: [h, a] }, round }
@@ -152,7 +152,7 @@ function normalise(m, idx) {
     group,
   };
 }
- 
+
 // ── Time helpers ───────────────────────────────────────────────────────────────
 function isPredOpen(dt) {
   if (!dt) return true;
@@ -191,14 +191,14 @@ function timeAgo(dt) {
   if (h < 24) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
 }
- 
- 
+
+
 // ── Toast ──────────────────────────────────────────────────────────────────────
 function Toast({ msg, onDone }) {
   useEffect(() => { const t = setTimeout(onDone, 2500); return () => clearTimeout(t); }, []);
   return <div className="toast">{msg}</div>;
 }
- 
+
 // ══════════════════════════════════════════════════════════════════════════════
 // FORCE PASSWORD CHANGE SCREEN
 // ══════════════════════════════════════════════════════════════════════════════
@@ -208,7 +208,7 @@ function ForcePasswordChange({ user, onDone }) {
   const [showPw, setShowPw] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
- 
+
   async function submit() {
     setErr("");
     if (pw.length < 4) { setErr("Password must be at least 4 characters."); return; }
@@ -223,7 +223,7 @@ function ForcePasswordChange({ user, onDone }) {
     } catch { setErr("Something went wrong. Please try again."); }
     setLoading(false);
   }
- 
+
   return (
     <div className="auth-wrap">
       <div className="auth-card">
@@ -258,7 +258,7 @@ function ForcePasswordChange({ user, onDone }) {
     </div>
   );
 }
- 
+
 // ══════════════════════════════════════════════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════════════════════════════════════════════
@@ -271,9 +271,9 @@ function Auth({ onLogin }) {
   const [showPw, setShowPw] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
- 
+
   function reset() { setErr(""); setPassword(""); setConfirmPw(""); setName(""); }
- 
+
   async function submit() {
     setErr(""); setLoading(true);
     const id = empId.trim().toUpperCase();
@@ -316,7 +316,7 @@ function Auth({ onLogin }) {
     } catch (e) { setErr("Something went wrong. Please try again."); console.error(e); }
     setLoading(false);
   }
- 
+
   return (
     <div className="auth-wrap">
       <div className="auth-card">
@@ -370,7 +370,7 @@ function Auth({ onLogin }) {
     </div>
   );
 }
- 
+
 // ══════════════════════════════════════════════════════════════════════════════
 // MATCH CARD
 // ══════════════════════════════════════════════════════════════════════════════
@@ -388,7 +388,7 @@ function MatchCard({ match, user, myPred, isAdmin, onScoreOverride, onToast }) {
   const cd = countdownStr(match.datetime);
   const closingSoon = cd && !cd.includes("h") && parseInt(cd) <= 30;
   const pts = isDone && myPred ? calcPoints(myPred, match) : null;
- 
+
   async function savePred() {
     if (!outcome) return;
     setSaving(true);
@@ -399,7 +399,7 @@ function MatchCard({ match, user, myPred, isAdmin, onScoreOverride, onToast }) {
     } catch { onToast("❌ Failed to save"); }
     setSaving(false);
   }
- 
+
   return (
     <div className={`mcard${isLive ? " live" : isDone ? " done" : ""}`}>
       <div className="mcard-top">
@@ -459,7 +459,7 @@ function MatchCard({ match, user, myPred, isAdmin, onScoreOverride, onToast }) {
     </div>
   );
 }
- 
+
 // ══════════════════════════════════════════════════════════════════════════════
 // LEADERBOARD
 // ══════════════════════════════════════════════════════════════════════════════
@@ -497,7 +497,7 @@ function Leaderboard({ user, matches, allUsers, allPreds }) {
     </div>
   );
 }
- 
+
 // ══════════════════════════════════════════════════════════════════════════════
 // MY PICKS
 // ══════════════════════════════════════════════════════════════════════════════
@@ -518,7 +518,7 @@ function MyPicks({ user, matches, myPreds, onToast }) {
     </div>
   );
 }
- 
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ADMIN PANEL
 // ══════════════════════════════════════════════════════════════════════════════
@@ -530,7 +530,7 @@ function AdminPanel({ matches, allUsers, allPreds, sessions, auditLog, onScoreOv
   sessions.forEach(s => { if (!deviceMap[s.device_id]) deviceMap[s.device_id] = []; if (!deviceMap[s.device_id].includes(s.emp_id)) deviceMap[s.device_id].push(s.emp_id); });
   const duplicates = Object.entries(deviceMap).filter(([,e]) => e.length > 1);
   const failedLogins = auditLog.filter(l => l.action === "login_failed").length;
- 
+
   async function resetPassword(empId, name) {
     setResetting(empId);
     try {
@@ -542,9 +542,9 @@ function AdminPanel({ matches, allUsers, allPreds, sessions, auditLog, onScoreOv
     } catch { onToast("❌ Reset failed"); }
     setResetting(null);
   }
- 
+
   const acClass = (a) => `ac ac-${a}` ;
- 
+
   return (
     <div>
       <div className="page-hd">
@@ -555,7 +555,7 @@ function AdminPanel({ matches, allUsers, allPreds, sessions, auditLog, onScoreOv
           ))}
         </div>
       </div>
- 
+
       {view === "overview" && (
         <div className="admin-grid">
           <div className="panel">
@@ -583,7 +583,7 @@ function AdminPanel({ matches, allUsers, allPreds, sessions, auditLog, onScoreOv
           </div>
         </div>
       )}
- 
+
       {view === "users" && (
         <div className="panel">
           <div className="panel-hd">👥 User Management — Reset Password</div>
@@ -605,7 +605,7 @@ function AdminPanel({ matches, allUsers, allPreds, sessions, auditLog, onScoreOv
           </div>
         </div>
       )}
- 
+
       {view === "devices" && (
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           {duplicates.length > 0 && (
@@ -634,7 +634,7 @@ function AdminPanel({ matches, allUsers, allPreds, sessions, auditLog, onScoreOv
           </div>
         </div>
       )}
- 
+
       {view === "log" && (
         <div className="panel">
           <div className="panel-hd">📋 Audit Log <span style={{fontSize:11,color:"var(--muted)",fontFamily:"Inter",fontWeight:400,marginLeft:8}}>{auditLog.length} events</span></div>
@@ -650,7 +650,7 @@ function AdminPanel({ matches, allUsers, allPreds, sessions, auditLog, onScoreOv
           </div>
         </div>
       )}
- 
+
       {view === "scores" && (
         <div className="panel">
           <div className="panel-hd">⚽ Manual Score Override</div>
@@ -665,7 +665,7 @@ function AdminPanel({ matches, allUsers, allPreds, sessions, auditLog, onScoreOv
     </div>
   );
 }
- 
+
 // ── Admin Gate ─────────────────────────────────────────────────────────────────
 function AdminGate({ onAuth }) {
   const [pw, setPw] = useState(""); const [err, setErr] = useState(false);
@@ -683,7 +683,7 @@ function AdminGate({ onAuth }) {
     </div>
   );
 }
- 
+
 // ── Demo matches ───────────────────────────────────────────────────────────────
 const DEMO = [
   {id:"d1",home:"Mexico",away:"USA",datetime:new Date(Date.now()+2*3600000).toISOString(),status:"scheduled",stage:"Group Stage",group:"A",home_score:null,away_score:null},
@@ -692,7 +692,7 @@ const DEMO = [
   {id:"d4",home:"England",away:"Spain",datetime:new Date(Date.now()-26*3600000).toISOString(),status:"completed",stage:"Group Stage",group:"D",home_score:0,away_score:0},
   {id:"d5",home:"Portugal",away:"Morocco",datetime:new Date(Date.now()+50*3600000).toISOString(),status:"scheduled",stage:"Group Stage",group:"E",home_score:null,away_score:null},
 ];
- 
+
 // ══════════════════════════════════════════════════════════════════════════════
 // MAIN APP
 // ══════════════════════════════════════════════════════════════════════════════
@@ -711,9 +711,9 @@ export default function App() {
   const [adminAuthed, setAdminAuthed] = useState(false);
   const [toast, setToast] = useState(null);
   const [, tick] = useState(0);
- 
+
   const showToast = (msg) => setToast(msg);
- 
+
   const loadMatches = useCallback(async () => {
     try {
       const r = await fetch(SCORES_API);
@@ -741,7 +741,7 @@ export default function App() {
     } catch { setApiOk(false); setMatches(DEMO); }
     setLoading(false);
   }, []);
- 
+
   const loadDB = useCallback(async () => {
     try {
       const [users, preds, sess, log] = await Promise.all([
@@ -753,10 +753,10 @@ export default function App() {
       setAllUsers(users); setAllPreds(preds); setSessions(sess); setAuditLog(log);
     } catch(e) { console.error(e); }
   }, []);
- 
+
   useEffect(() => { loadMatches(); loadDB(); }, []);
   useEffect(() => { const t = setInterval(() => { loadMatches(); loadDB(); tick(n=>n+1); }, 60000); return () => clearInterval(t); }, []);
- 
+
   async function handleScoreOverride(matchId, hs, as_) {
     try {
       await sb.upsert("match_overrides", { match_id: matchId, home_score: hs, away_score: as_ });
@@ -769,12 +769,12 @@ export default function App() {
       console.error(e);
     }
   }
- 
+
   // Show force password change screen
   if (user && needsPwChange) {
     return <ForcePasswordChange user={user} onDone={() => setNeedsPwChange(false)} />;
   }
- 
+
   if (!user) return (
     <Auth onLogin={u => {
       setUser(u);
@@ -782,7 +782,7 @@ export default function App() {
       loadDB();
     }} />
   );
- 
+
   const myPreds = allPreds.filter(p => p.emp_id === user.empId);
   const myPts = matches.filter(m=>m.status==="completed").reduce((acc,m)=>{ const p=myPreds.find(x=>x.match_id===m.id); return acc+(p?calcPoints(p,m)||0:0); },0);
   const now = Date.now();
@@ -790,7 +790,7 @@ export default function App() {
   const live = matches.filter(m => m.status==="live");
   const completed = matches.filter(m => m.status==="completed");
   const filtered = filter==="upcoming"?upcoming:filter==="live"?live:filter==="completed"?completed:matches;
- 
+
   return (
     <div className="app">
       {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
@@ -814,7 +814,7 @@ export default function App() {
           </div>
         </div>
       </header>
- 
+
       <div className="hero">
         <div className="hero-title">⚽ FIFA World Cup 2026 ⚽</div>
         <div className="hero-sub">June 11 – July 19 · USA · Canada · Mexico · 48 Teams · 104 Matches</div>
@@ -824,7 +824,7 @@ export default function App() {
           ))}
         </div>
       </div>
- 
+
       <div className="main">
         {tab==="matches" && (
           <div>
@@ -850,198 +850,4 @@ export default function App() {
       </div>
     </div>
   );
-}
- 
- 
-============================================================
-FILE 2 STARTS HERE — src/App.css
-============================================================
-FILE 2 of 2: src/App.css — PASTE BELOW THIS LINE
-============================================================
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#07090f;--surface:#0e1420;--card:#121a28;
-  --border:#1c2a3e;--border2:#243348;
-  --gold:#f0b429;--gold2:#d4920a;--gold-dim:#f0b42922;
-  --green:#22c55e;--green-dim:#22c55e22;
-  --red:#ef4444;--red-dim:#ef444422;
-  --muted:#4a6080;--muted2:#6b8aaa;
-  --text:#dde6f0;--white:#fff;
-}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
-.app{min-height:100vh;display:flex;flex-direction:column}
- 
-/* Header */
-.hdr{background:linear-gradient(180deg,#0c1322 0%,#080d18 100%);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200}
-.hdr-inner{max-width:1200px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-ball{font-size:26px;animation:float 3s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.logo-text{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--gold);letter-spacing:1.5px;line-height:1.1}
-.logo-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
-.hdr-right{display:flex;align-items:center;gap:10px}
-.user-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:4px 12px 4px 4px}
-.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000}
-.user-name{font-size:13px;font-weight:600;color:var(--text)}
-.user-pts{font-size:10px;color:var(--gold);font-weight:700}
- 
-/* Buttons */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Inter',sans-serif;white-space:nowrap}
-.btn-gold{background:var(--gold);color:#000}.btn-gold:hover{background:var(--gold2)}
-.btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
-.btn-red{background:#2d0a0a;color:#f87171;border:1px solid #5c1414}.btn-red:hover{background:#3d1010}
-.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
-.btn:disabled{opacity:.4;cursor:not-allowed}
- 
-/* Nav */
-.nav-tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px}
-.nav-tab{padding:6px 14px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
-.nav-tab.active{background:var(--gold);color:#000}
-.nav-tab:not(.active):hover{color:var(--text)}
- 
-/* Hero */
-.hero{background:linear-gradient(180deg,#0d1a2e 0%,var(--bg) 100%);padding:28px 20px 20px;border-bottom:1px solid var(--border);text-align:center}
-.hero-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(28px,5vw,52px);color:var(--gold);letter-spacing:3px;text-transform:uppercase;line-height:1;text-shadow:0 0 40px rgba(240,180,41,.3)}
-.hero-sub{color:var(--muted2);font-size:13px;margin-top:6px}
-.hero-stats{display:flex;justify-content:center;gap:24px;margin-top:20px;flex-wrap:wrap}
-.hstat{text-align:center;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:80px}
-.hstat-n{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;color:var(--gold)}
-.hstat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
- 
-/* Main */
-.main{max-width:1200px;margin:0 auto;padding:20px;width:100%;flex:1}
-.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
-.page-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:var(--text);letter-spacing:1px;text-transform:uppercase}
- 
-/* Filters */
-.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.filt{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
-.filt.active{background:var(--gold);color:#000;border-color:var(--gold)}
-.filt:not(.active):hover{color:var(--text);border-color:var(--border2)}
- 
-/* API bar */
-.api-bar{display:flex;align-items:center;gap:6px;font-size:11px;padding:6px 12px;border-radius:6px;margin-bottom:12px;border:1px solid var(--border);background:var(--surface);color:var(--muted2)}
-.api-bar.err{border-color:#5c1414;background:#1a0808;color:#f87171}
-.api-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
-.api-dot.off{background:var(--red)}
- 
-/* Match cards */
-.matches{display:flex;flex-direction:column;gap:10px}
-.mcard{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s}
-.mcard:hover{border-color:var(--border2)}
-.mcard.live{border-color:var(--green);box-shadow:0 0 20px var(--green-dim)}
-.mcard.done{opacity:.85}
-.mcard-top{display:flex;align-items:center;justify-content:space-between;padding:5px 14px;background:#080d18;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.live-pill{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-weight:700}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.4s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.mcard-body{display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:8px;padding:14px 16px}
-.team{display:flex;flex-direction:column;align-items:center;gap:5px}
-.team-r{align-items:flex-end}
-.tflag{font-size:34px;line-height:1}
-.tname{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-align:center;color:var(--text)}
-.scorebox{text-align:center}
-.score-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;color:var(--gold);letter-spacing:6px;line-height:1}
-.score-vs{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--muted);letter-spacing:2px}
-.score-lbl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:1px}
-.cd-badge{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-dim)}
-.cd-badge.warn{background:var(--red-dim);color:var(--red);border-color:var(--red-dim)}
-.mcard-foot{border-top:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:48px}
- 
-/* Prediction */
-.pred-ui{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.out-btns{display:flex;gap:3px}
-.out-btn{padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:11px;font-weight:700;cursor:pointer;transition:all .13s;font-family:'Inter',sans-serif}
-.out-btn.sel.h{background:#1a3460;color:#60a5fa;border-color:#3b82f6}
-.out-btn.sel.d{background:#2d2410;color:#fbbf24;border-color:#f59e0b}
-.out-btn.sel.a{background:#0f2d1a;color:#4ade80;border-color:#22c55e}
-.score-inp-wrap{display:flex;align-items:center;gap:4px}
-.sinp{width:34px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:4px 2px;font-size:14px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
-.sinp:focus{outline:none;border-color:var(--gold)}
-.sep{color:var(--muted);font-weight:700;font-size:13px}
-.locked-msg{font-size:11px;color:var(--red);font-weight:500}
-.pred-existing{font-size:12px;color:var(--muted2)}
-.pts-chip{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:12px;font-size:12px;font-weight:700}
-.pts-2{background:#0f3320;color:#4ade80;border:1px solid #166534}
-.pts-1{background:#2a2000;color:#fbbf24;border:1px solid #854d0e}
-.pts-0{background:#1a1a1a;color:var(--muted);border:1px solid var(--border)}
- 
-/* Leaderboard */
-.lb{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.lb-hd{padding:12px 18px;background:#080d18;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.lb-row{display:grid;grid-template-columns:48px 1fr auto auto;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid #ffffff08;transition:background .15s}
-.lb-row:hover{background:#ffffff04}
-.lb-row:last-child{border-bottom:none}
-.lb-row.me{background:linear-gradient(90deg,var(--gold-dim),transparent);border-left:3px solid var(--gold)}
-.rank-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;text-align:center;color:var(--muted)}
-.rank-num.r1{color:#f5c842}.rank-num.r2{color:#94a3b8}.rank-num.r3{color:#c07d3a}
-.lb-name{font-weight:600;font-size:14px;color:var(--text)}
-.lb-empid{font-size:11px;color:var(--muted);margin-top:1px}
-.lb-pts-n{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;color:var(--gold)}
-.lb-picks{font-size:11px;color:var(--muted);text-align:right}
- 
-/* Admin */
-.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:800px){.admin-grid{grid-template-columns:1fr}}
-.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.panel-hd{padding:12px 16px;background:#080d18;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px;color:var(--gold);text-transform:uppercase}
-.panel-body{max-height:480px;overflow-y:auto}
-.log-row{display:flex;align-items:flex-start;gap:10px;padding:8px 14px;border-bottom:1px solid #ffffff06;font-size:12px}
-.log-row:last-child{border-bottom:none}
-.log-emp{font-weight:700;color:var(--text);min-width:90px;flex-shrink:0}
-.log-action{color:var(--muted2);flex:1}
-.log-time{color:var(--muted);flex-shrink:0;font-size:10px}
-.dev-row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 14px;border-bottom:1px solid #ffffff06;font-size:12px}
-.dev-row:last-child{border-bottom:none}
-.dev-emp{font-weight:700;color:var(--text)}
-.dev-info{color:var(--muted2);font-size:11px;margin-top:2px}
-.dev-time{color:var(--muted);font-size:10px;text-align:right}
-.ac{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;margin-right:4px}
-.ac-login{background:#1a3460;color:#60a5fa}
-.ac-prediction{background:#0f2d1a;color:#4ade80}
-.ac-signup{background:#2d1f00;color:#fbbf24}
-.ac-score{background:#2d0a2d;color:#c084fc}
-.ac-reset{background:#3d1515;color:#f87171}
-.ac-login_failed{background:#3d1515;color:#f87171}
-.ac-pw_change{background:#0f2d1a;color:#4ade80}
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px}
-.scard{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
-.scard-n{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--gold)}
-.scard-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.user-mgmt-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #ffffff06;font-size:12px}
-.user-mgmt-row:last-child{border-bottom:none}
- 
-/* Auth */
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#0d1a2e 0%,var(--bg) 60%);padding:24px}
-.auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:420px}
-.auth-logo{font-size:52px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(240,180,41,.5))}
-.auth-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:30px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;text-align:center}
-.auth-sub{font-size:12px;color:var(--muted);text-align:center;margin-top:4px;margin-bottom:28px}
-.field{margin-bottom:14px}
-.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-.field input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:11px 14px;font-size:14px;font-family:'Inter',sans-serif;transition:border-color .15s}
-.field input:focus{outline:none;border-color:var(--gold)}
-.pw-wrap{position:relative}
-.pw-wrap input{padding-right:42px}
-.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0}
-.auth-submit{width:100%;padding:13px;background:var(--gold);color:#000;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1.5px;transition:background .15s;margin-top:6px}
-.auth-submit:hover{background:var(--gold2)}
-.auth-submit:disabled{opacity:.5;cursor:not-allowed}
-.auth-toggle{margin-top:18px;text-align:center;font-size:13px;color:var(--muted)}
-.auth-toggle span{color:var(--gold);cursor:pointer;font-weight:600}
-.err-box{color:#f87171;font-size:12px;padding:8px 12px;background:#1a0808;border:1px solid #5c1414;border-radius:6px;margin-top:8px}
-.info-box{color:#60a5fa;font-size:12px;padding:8px 12px;background:#0d1e3a;border:1px solid #1e4080;border-radius:6px;margin-bottom:12px}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f2d1a;color:#4ade80;border:1px solid #166534;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;animation:fadeup .3s ease;white-space:nowrap}
-@keyframes fadeup{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
-.spin{display:inline-block;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.badge-admin{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:#2d1f00;color:var(--gold);border:1px solid #854d0e;margin-left:8px}
-@media(max-width:640px){
-  .mcard-body{grid-template-columns:1fr 90px 1fr;padding:10px 12px}
-  .tflag{font-size:26px}.tname{font-size:13px}.score-num{font-size:28px}
-  .hdr-inner{flex-wrap:wrap;height:auto;padding:10px 16px;gap:8px}
-  .nav-tabs{order:3;width:100%}
-  .admin-grid{grid-template-columns:1fr}
 }
