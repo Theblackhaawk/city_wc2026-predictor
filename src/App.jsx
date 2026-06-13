@@ -274,7 +274,7 @@ function Auth({ onLogin }) {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-logo"><img src="https://digitalhub.fifa.com/transform/a0c1ce4a-75c2-4b90-869a-7b93bfe56e6a/FIFA-World-Cup-2026-Official-Emblem" alt="FIFA WC 2026" style={{width:"100px",height:"auto",filter:"drop-shadow(0 0 20px rgba(240,180,41,.5))"}} onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="block"}} /><span style={{display:"none",fontSize:"52px"}}>🏆</span></div>
+        <div className="auth-logo"><img src="/wc2026-logo.svg" alt="FIFA WC 2026" style={{width:"110px",height:"auto",filter:"drop-shadow(0 0 20px rgba(240,180,41,.6))"}} /></div>
         <div className="auth-title" style={{fontSize:"22px",letterSpacing:"1px"}}>World Cup Prediction Championship 2026</div>
         <div className="auth-sub">CITY BANK · FINANCE DIVISION</div>
         <div className="field">
