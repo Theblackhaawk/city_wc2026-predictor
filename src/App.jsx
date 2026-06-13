@@ -1,3 +1,5 @@
+import { useState, useEffect, useCallback, useRef } from "react";
+
 // ── Config ─────────────────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://nkqavfpbwdaqmzkcsufx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-zcCan8Yn75xr1RtVzNHPA_REQuFXwo";
