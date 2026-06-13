@@ -106,10 +106,21 @@ function calcPoints(pred, match) {
 }
 
 // ── Match normalise ────────────────────────────────────────────────────────────
+// Playoff winner name corrections (openfootball uses placeholder names)
+const TEAM_FIXES = {
+  "UEFA Path A winner": "Bosnia and Herzegovina",
+  "UEFA Path B winner": "Sweden",
+  "UEFA Path C winner": "Türkiye",
+  "UEFA Path D winner": "Czechia",
+  "IC Path 1 winner": "DR Congo",
+  "IC Path 2 winner": "Iraq",
+};
+function fixTeam(name) { return TEAM_FIXES[name] || name; }
+
 function normalise(m, idx) {
   // openfootball format: { team1, team2, date, time, group, score: { ft: [h, a] }, round }
-  const home = m.team1 || "TBD";
-  const away = m.team2 || "TBD";
+  const home = fixTeam(m.team1 || "TBD");
+  const away = fixTeam(m.team2 || "TBD");
   // Convert "13:00 UTC-6" to proper UTC ISO datetime
   let dt = "";
   if (m.date) {
