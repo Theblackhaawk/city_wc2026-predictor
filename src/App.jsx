@@ -669,93 +669,137 @@ export default function App() {
   const showToast = (msg) => setToast(msg);
 
 
-// ── Complete FIFA World Cup 2026 fixture list (official schedule) ──────────────
+// ── Complete FIFA World Cup 2026 fixture list — all 104 matches, sorted by kickoff ─
 const WC_FIXTURES = [
-  // Group A
+  // === GROUP STAGE ===
+  // Jun 11
   {id:"1",home:"Mexico",away:"South Africa",datetime:"2026-06-11T19:00:00Z",group:"A",stage:"Group Stage"},
   {id:"2",home:"South Korea",away:"Czechia",datetime:"2026-06-12T02:00:00Z",group:"A",stage:"Group Stage"},
-  {id:"19",home:"Czechia",away:"South Africa",datetime:"2026-06-19T16:00:00Z",group:"A",stage:"Group Stage"},
-  {id:"20",home:"Mexico",away:"South Korea",datetime:"2026-06-19T01:00:00Z",group:"A",stage:"Group Stage"},
-  {id:"37",home:"Czechia",away:"Mexico",datetime:"2026-06-25T01:00:00Z",group:"A",stage:"Group Stage"},
-  {id:"38",home:"South Africa",away:"South Korea",datetime:"2026-06-25T01:00:00Z",group:"A",stage:"Group Stage"},
-  // Group B
-  {id:"3",home:"Canada",away:"Bosnia and Herzegovina",datetime:"2026-06-12T19:00:00Z",group:"B",stage:"Group Stage"},
-  {id:"4",home:"Qatar",away:"Switzerland",datetime:"2026-06-13T19:00:00Z",group:"B",stage:"Group Stage"},
-  {id:"21",home:"Switzerland",away:"Bosnia and Herzegovina",datetime:"2026-06-19T19:00:00Z",group:"B",stage:"Group Stage"},
-  {id:"22",home:"Canada",away:"Qatar",datetime:"2026-06-19T22:00:00Z",group:"B",stage:"Group Stage"},
-  {id:"39",home:"Switzerland",away:"Canada",datetime:"2026-06-24T19:00:00Z",group:"B",stage:"Group Stage"},
-  {id:"40",home:"Bosnia and Herzegovina",away:"Qatar",datetime:"2026-06-24T19:00:00Z",group:"B",stage:"Group Stage"},
-  // Group C
-  {id:"5",home:"Brazil",away:"Morocco",datetime:"2026-06-13T22:00:00Z",group:"C",stage:"Group Stage"},
-  {id:"6",home:"Haiti",away:"Scotland",datetime:"2026-06-14T01:00:00Z",group:"C",stage:"Group Stage"},
-  {id:"23",home:"Scotland",away:"Morocco",datetime:"2026-06-19T22:00:00Z",group:"C",stage:"Group Stage"},
-  {id:"24",home:"Brazil",away:"Haiti",datetime:"2026-06-20T01:00:00Z",group:"C",stage:"Group Stage"},
-  {id:"41",home:"Scotland",away:"Brazil",datetime:"2026-06-24T22:00:00Z",group:"C",stage:"Group Stage"},
-  {id:"42",home:"Morocco",away:"Haiti",datetime:"2026-06-24T22:00:00Z",group:"C",stage:"Group Stage"},
-  // Group D
-  {id:"7",home:"USA",away:"Paraguay",datetime:"2026-06-13T01:00:00Z",group:"D",stage:"Group Stage"},
+  // Jun 12
+  {id:"3",home:"USA",away:"Paraguay",datetime:"2026-06-12T23:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"4",home:"Canada",away:"Bosnia and Herzegovina",datetime:"2026-06-12T19:00:00Z",group:"B",stage:"Group Stage"},
+  // Jun 13
+  {id:"5",home:"Qatar",away:"Switzerland",datetime:"2026-06-13T19:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"6",home:"Brazil",away:"Morocco",datetime:"2026-06-13T22:00:00Z",group:"C",stage:"Group Stage"},
+  {id:"7",home:"Haiti",away:"Scotland",datetime:"2026-06-14T01:00:00Z",group:"C",stage:"Group Stage"},
   {id:"8",home:"Australia",away:"Türkiye",datetime:"2026-06-14T04:00:00Z",group:"D",stage:"Group Stage"},
-  {id:"25",home:"USA",away:"Australia",datetime:"2026-06-19T19:00:00Z",group:"D",stage:"Group Stage"},
-  {id:"26",home:"Türkiye",away:"Paraguay",datetime:"2026-06-20T04:00:00Z",group:"D",stage:"Group Stage"},
-  {id:"43",home:"Türkiye",away:"USA",datetime:"2026-06-26T02:00:00Z",group:"D",stage:"Group Stage"},
-  {id:"44",home:"Paraguay",away:"Australia",datetime:"2026-06-26T02:00:00Z",group:"D",stage:"Group Stage"},
-  // Group E
+  // Jun 14
   {id:"9",home:"Germany",away:"Curaçao",datetime:"2026-06-14T17:00:00Z",group:"E",stage:"Group Stage"},
   {id:"10",home:"Ivory Coast",away:"Ecuador",datetime:"2026-06-14T23:00:00Z",group:"E",stage:"Group Stage"},
-  {id:"27",home:"Germany",away:"Ivory Coast",datetime:"2026-06-20T20:00:00Z",group:"E",stage:"Group Stage"},
-  {id:"28",home:"Ecuador",away:"Curaçao",datetime:"2026-06-21T00:00:00Z",group:"E",stage:"Group Stage"},
-  {id:"45",home:"Curaçao",away:"Ivory Coast",datetime:"2026-06-25T20:00:00Z",group:"E",stage:"Group Stage"},
-  {id:"46",home:"Ecuador",away:"Germany",datetime:"2026-06-25T20:00:00Z",group:"E",stage:"Group Stage"},
-  // Group F
   {id:"11",home:"Netherlands",away:"Japan",datetime:"2026-06-14T20:00:00Z",group:"F",stage:"Group Stage"},
   {id:"12",home:"Sweden",away:"Tunisia",datetime:"2026-06-15T02:00:00Z",group:"F",stage:"Group Stage"},
-  {id:"29",home:"Netherlands",away:"Sweden",datetime:"2026-06-20T17:00:00Z",group:"F",stage:"Group Stage"},
-  {id:"30",home:"Tunisia",away:"Japan",datetime:"2026-06-21T04:00:00Z",group:"F",stage:"Group Stage"},
-  {id:"47",home:"Japan",away:"Sweden",datetime:"2026-06-25T23:00:00Z",group:"F",stage:"Group Stage"},
-  {id:"48",home:"Tunisia",away:"Netherlands",datetime:"2026-06-25T23:00:00Z",group:"F",stage:"Group Stage"},
-  // Group G
-  {id:"13",home:"Belgium",away:"Egypt",datetime:"2026-06-15T19:00:00Z",group:"G",stage:"Group Stage"},
-  {id:"14",home:"Iran",away:"New Zealand",datetime:"2026-06-16T01:00:00Z",group:"G",stage:"Group Stage"},
-  {id:"31",home:"Belgium",away:"Iran",datetime:"2026-06-21T19:00:00Z",group:"G",stage:"Group Stage"},
-  {id:"32",home:"New Zealand",away:"Egypt",datetime:"2026-06-22T01:00:00Z",group:"G",stage:"Group Stage"},
-  {id:"49",home:"Egypt",away:"Iran",datetime:"2026-06-27T03:00:00Z",group:"G",stage:"Group Stage"},
-  {id:"50",home:"New Zealand",away:"Belgium",datetime:"2026-06-27T03:00:00Z",group:"G",stage:"Group Stage"},
-  // Group H
-  {id:"15",home:"Spain",away:"Cape Verde",datetime:"2026-06-15T16:00:00Z",group:"H",stage:"Group Stage"},
-  {id:"16",home:"Saudi Arabia",away:"Uruguay",datetime:"2026-06-15T22:00:00Z",group:"H",stage:"Group Stage"},
-  {id:"33",home:"Spain",away:"Saudi Arabia",datetime:"2026-06-21T16:00:00Z",group:"H",stage:"Group Stage"},
-  {id:"34",home:"Uruguay",away:"Cape Verde",datetime:"2026-06-21T22:00:00Z",group:"H",stage:"Group Stage"},
-  {id:"51",home:"Cape Verde",away:"Saudi Arabia",datetime:"2026-06-27T00:00:00Z",group:"H",stage:"Group Stage"},
-  {id:"52",home:"Uruguay",away:"Spain",datetime:"2026-06-27T00:00:00Z",group:"H",stage:"Group Stage"},
-  // Group I
+  // Jun 15
+  {id:"13",home:"Spain",away:"Cape Verde",datetime:"2026-06-15T16:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"14",home:"Belgium",away:"Egypt",datetime:"2026-06-15T19:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"15",home:"Saudi Arabia",away:"Uruguay",datetime:"2026-06-15T22:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"16",home:"Iran",away:"New Zealand",datetime:"2026-06-16T01:00:00Z",group:"G",stage:"Group Stage"},
+  // Jun 16
   {id:"17",home:"France",away:"Senegal",datetime:"2026-06-16T19:00:00Z",group:"I",stage:"Group Stage"},
   {id:"18",home:"Iraq",away:"Norway",datetime:"2026-06-16T22:00:00Z",group:"I",stage:"Group Stage"},
-  {id:"35",home:"France",away:"Iraq",datetime:"2026-06-22T21:00:00Z",group:"I",stage:"Group Stage"},
-  {id:"36",home:"Norway",away:"Senegal",datetime:"2026-06-23T00:00:00Z",group:"I",stage:"Group Stage"},
-  {id:"53",home:"Norway",away:"France",datetime:"2026-06-26T19:00:00Z",group:"I",stage:"Group Stage"},
-  {id:"54",home:"Senegal",away:"Iraq",datetime:"2026-06-26T19:00:00Z",group:"I",stage:"Group Stage"},
-  // Group J
-  {id:"55",home:"Argentina",away:"Algeria",datetime:"2026-06-17T01:00:00Z",group:"J",stage:"Group Stage"},
-  {id:"56",home:"Austria",away:"Jordan",datetime:"2026-06-17T04:00:00Z",group:"J",stage:"Group Stage"},
-  {id:"57",home:"Argentina",away:"Austria",datetime:"2026-06-22T17:00:00Z",group:"J",stage:"Group Stage"},
-  {id:"58",home:"Jordan",away:"Algeria",datetime:"2026-06-23T03:00:00Z",group:"J",stage:"Group Stage"},
-  {id:"59",home:"Algeria",away:"Austria",datetime:"2026-06-28T02:00:00Z",group:"J",stage:"Group Stage"},
-  {id:"60",home:"Jordan",away:"Argentina",datetime:"2026-06-28T02:00:00Z",group:"J",stage:"Group Stage"},
-  // Group K
-  {id:"61",home:"Portugal",away:"DR Congo",datetime:"2026-06-17T17:00:00Z",group:"K",stage:"Group Stage"},
-  {id:"62",home:"Uzbekistan",away:"Colombia",datetime:"2026-06-17T23:00:00Z",group:"K",stage:"Group Stage"},
-  {id:"63",home:"Portugal",away:"Uzbekistan",datetime:"2026-06-23T19:00:00Z",group:"K",stage:"Group Stage"},
-  {id:"64",home:"Colombia",away:"DR Congo",datetime:"2026-06-23T22:00:00Z",group:"K",stage:"Group Stage"},
-  {id:"65",home:"DR Congo",away:"Uzbekistan",datetime:"2026-06-27T23:00:00Z",group:"K",stage:"Group Stage"},
-  {id:"66",home:"Colombia",away:"Portugal",datetime:"2026-06-27T23:00:00Z",group:"K",stage:"Group Stage"},
-  // Group L
-  {id:"67",home:"England",away:"Croatia",datetime:"2026-06-18T19:00:00Z",group:"L",stage:"Group Stage"},
-  {id:"68",home:"Ghana",away:"Panama",datetime:"2026-06-18T22:00:00Z",group:"L",stage:"Group Stage"},
-  {id:"69",home:"England",away:"Ghana",datetime:"2026-06-23T23:00:00Z",group:"L",stage:"Group Stage"},
-  {id:"70",home:"Panama",away:"Croatia",datetime:"2026-06-24T02:00:00Z",group:"L",stage:"Group Stage"},
+  {id:"19",home:"Argentina",away:"Algeria",datetime:"2026-06-17T01:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"20",home:"Austria",away:"Jordan",datetime:"2026-06-17T04:00:00Z",group:"J",stage:"Group Stage"},
+  // Jun 17
+  {id:"21",home:"Portugal",away:"DR Congo",datetime:"2026-06-17T17:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"22",home:"Uzbekistan",away:"Colombia",datetime:"2026-06-17T23:00:00Z",group:"K",stage:"Group Stage"},
+  // Jun 18
+  {id:"23",home:"England",away:"Croatia",datetime:"2026-06-18T19:00:00Z",group:"L",stage:"Group Stage"},
+  {id:"24",home:"Ghana",away:"Panama",datetime:"2026-06-18T22:00:00Z",group:"L",stage:"Group Stage"},
+  // Jun 19
+  {id:"25",home:"Czechia",away:"South Africa",datetime:"2026-06-19T16:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"26",home:"Mexico",away:"South Korea",datetime:"2026-06-19T19:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"27",home:"Switzerland",away:"Bosnia and Herzegovina",datetime:"2026-06-19T19:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"28",home:"Canada",away:"Qatar",datetime:"2026-06-19T22:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"29",home:"Scotland",away:"Morocco",datetime:"2026-06-19T22:00:00Z",group:"C",stage:"Group Stage"},
+  {id:"30",home:"Brazil",away:"Haiti",datetime:"2026-06-20T01:00:00Z",group:"C",stage:"Group Stage"},
+  // Jun 20
+  {id:"31",home:"USA",away:"Australia",datetime:"2026-06-20T19:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"32",home:"Türkiye",away:"Paraguay",datetime:"2026-06-20T22:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"33",home:"Germany",away:"Ivory Coast",datetime:"2026-06-20T20:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"34",home:"Ecuador",away:"Curaçao",datetime:"2026-06-21T00:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"35",home:"Netherlands",away:"Sweden",datetime:"2026-06-21T17:00:00Z",group:"F",stage:"Group Stage"},
+  {id:"36",home:"Tunisia",away:"Japan",datetime:"2026-06-21T04:00:00Z",group:"F",stage:"Group Stage"},
+  // Jun 21
+  {id:"37",home:"Spain",away:"Saudi Arabia",datetime:"2026-06-21T16:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"38",home:"Belgium",away:"Iran",datetime:"2026-06-21T19:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"39",home:"Uruguay",away:"Cape Verde",datetime:"2026-06-21T22:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"40",home:"New Zealand",away:"Egypt",datetime:"2026-06-22T01:00:00Z",group:"G",stage:"Group Stage"},
+  // Jun 22
+  {id:"41",home:"France",away:"Iraq",datetime:"2026-06-22T21:00:00Z",group:"I",stage:"Group Stage"},
+  {id:"42",home:"Norway",away:"Senegal",datetime:"2026-06-23T00:00:00Z",group:"I",stage:"Group Stage"},
+  {id:"43",home:"Argentina",away:"Austria",datetime:"2026-06-22T17:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"44",home:"Jordan",away:"Algeria",datetime:"2026-06-23T03:00:00Z",group:"J",stage:"Group Stage"},
+  // Jun 23
+  {id:"45",home:"Portugal",away:"Uzbekistan",datetime:"2026-06-23T19:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"46",home:"Colombia",away:"DR Congo",datetime:"2026-06-23T22:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"47",home:"England",away:"Ghana",datetime:"2026-06-23T23:00:00Z",group:"L",stage:"Group Stage"},
+  {id:"48",home:"Panama",away:"Croatia",datetime:"2026-06-24T02:00:00Z",group:"L",stage:"Group Stage"},
+  // Jun 24
+  {id:"49",home:"Czechia",away:"Mexico",datetime:"2026-06-25T01:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"50",home:"South Africa",away:"South Korea",datetime:"2026-06-25T01:00:00Z",group:"A",stage:"Group Stage"},
+  {id:"51",home:"Switzerland",away:"Canada",datetime:"2026-06-24T19:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"52",home:"Bosnia and Herzegovina",away:"Qatar",datetime:"2026-06-24T19:00:00Z",group:"B",stage:"Group Stage"},
+  {id:"53",home:"Scotland",away:"Brazil",datetime:"2026-06-24T22:00:00Z",group:"C",stage:"Group Stage"},
+  {id:"54",home:"Morocco",away:"Haiti",datetime:"2026-06-24T22:00:00Z",group:"C",stage:"Group Stage"},
+  // Jun 25
+  {id:"55",home:"Türkiye",away:"USA",datetime:"2026-06-26T02:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"56",home:"Paraguay",away:"Australia",datetime:"2026-06-26T02:00:00Z",group:"D",stage:"Group Stage"},
+  {id:"57",home:"Curaçao",away:"Ivory Coast",datetime:"2026-06-25T20:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"58",home:"Ecuador",away:"Germany",datetime:"2026-06-25T20:00:00Z",group:"E",stage:"Group Stage"},
+  {id:"59",home:"Japan",away:"Sweden",datetime:"2026-06-25T23:00:00Z",group:"F",stage:"Group Stage"},
+  {id:"60",home:"Tunisia",away:"Netherlands",datetime:"2026-06-25T23:00:00Z",group:"F",stage:"Group Stage"},
+  // Jun 26
+  {id:"61",home:"Egypt",away:"Iran",datetime:"2026-06-27T03:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"62",home:"New Zealand",away:"Belgium",datetime:"2026-06-27T03:00:00Z",group:"G",stage:"Group Stage"},
+  {id:"63",home:"Cape Verde",away:"Saudi Arabia",datetime:"2026-06-27T00:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"64",home:"Uruguay",away:"Spain",datetime:"2026-06-27T00:00:00Z",group:"H",stage:"Group Stage"},
+  {id:"65",home:"Norway",away:"France",datetime:"2026-06-26T19:00:00Z",group:"I",stage:"Group Stage"},
+  {id:"66",home:"Senegal",away:"Iraq",datetime:"2026-06-26T19:00:00Z",group:"I",stage:"Group Stage"},
+  // Jun 27
+  {id:"67",home:"Algeria",away:"Austria",datetime:"2026-06-28T02:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"68",home:"Jordan",away:"Argentina",datetime:"2026-06-28T02:00:00Z",group:"J",stage:"Group Stage"},
+  {id:"69",home:"DR Congo",away:"Uzbekistan",datetime:"2026-06-27T23:00:00Z",group:"K",stage:"Group Stage"},
+  {id:"70",home:"Colombia",away:"Portugal",datetime:"2026-06-27T23:00:00Z",group:"K",stage:"Group Stage"},
   {id:"71",home:"Croatia",away:"Ghana",datetime:"2026-06-28T19:00:00Z",group:"L",stage:"Group Stage"},
   {id:"72",home:"Panama",away:"England",datetime:"2026-06-28T19:00:00Z",group:"L",stage:"Group Stage"},
-];
+  // === ROUND OF 32 (Jun 28 - Jul 3) ===
+  {id:"73",home:"TBD",away:"TBD",datetime:"2026-06-29T19:00:00Z",group:"",stage:"Round of 32"},
+  {id:"74",home:"TBD",away:"TBD",datetime:"2026-06-29T22:00:00Z",group:"",stage:"Round of 32"},
+  {id:"75",home:"TBD",away:"TBD",datetime:"2026-06-30T00:00:00Z",group:"",stage:"Round of 32"},
+  {id:"76",home:"TBD",away:"TBD",datetime:"2026-06-30T19:00:00Z",group:"",stage:"Round of 32"},
+  {id:"77",home:"TBD",away:"TBD",datetime:"2026-06-30T22:00:00Z",group:"",stage:"Round of 32"},
+  {id:"78",home:"TBD",away:"TBD",datetime:"2026-07-01T00:00:00Z",group:"",stage:"Round of 32"},
+  {id:"79",home:"TBD",away:"TBD",datetime:"2026-07-01T19:00:00Z",group:"",stage:"Round of 32"},
+  {id:"80",home:"TBD",away:"TBD",datetime:"2026-07-01T22:00:00Z",group:"",stage:"Round of 32"},
+  {id:"81",home:"TBD",away:"TBD",datetime:"2026-07-02T00:00:00Z",group:"",stage:"Round of 32"},
+  {id:"82",home:"TBD",away:"TBD",datetime:"2026-07-02T19:00:00Z",group:"",stage:"Round of 32"},
+  {id:"83",home:"TBD",away:"TBD",datetime:"2026-07-02T22:00:00Z",group:"",stage:"Round of 32"},
+  {id:"84",home:"TBD",away:"TBD",datetime:"2026-07-03T00:00:00Z",group:"",stage:"Round of 32"},
+  {id:"85",home:"TBD",away:"TBD",datetime:"2026-07-03T19:00:00Z",group:"",stage:"Round of 32"},
+  {id:"86",home:"TBD",away:"TBD",datetime:"2026-07-03T22:00:00Z",group:"",stage:"Round of 32"},
+  {id:"87",home:"TBD",away:"TBD",datetime:"2026-07-04T00:00:00Z",group:"",stage:"Round of 32"},
+  {id:"88",home:"TBD",away:"TBD",datetime:"2026-07-04T19:00:00Z",group:"",stage:"Round of 32"},
+  // === ROUND OF 16 (Jul 4-7) ===
+  {id:"89",home:"TBD",away:"TBD",datetime:"2026-07-05T19:00:00Z",group:"",stage:"Round of 16"},
+  {id:"90",home:"TBD",away:"TBD",datetime:"2026-07-05T22:00:00Z",group:"",stage:"Round of 16"},
+  {id:"91",home:"TBD",away:"TBD",datetime:"2026-07-06T00:00:00Z",group:"",stage:"Round of 16"},
+  {id:"92",home:"TBD",away:"TBD",datetime:"2026-07-06T19:00:00Z",group:"",stage:"Round of 16"},
+  {id:"93",home:"TBD",away:"TBD",datetime:"2026-07-06T22:00:00Z",group:"",stage:"Round of 16"},
+  {id:"94",home:"TBD",away:"TBD",datetime:"2026-07-07T00:00:00Z",group:"",stage:"Round of 16"},
+  {id:"95",home:"TBD",away:"TBD",datetime:"2026-07-07T19:00:00Z",group:"",stage:"Round of 16"},
+  {id:"96",home:"TBD",away:"TBD",datetime:"2026-07-07T22:00:00Z",group:"",stage:"Round of 16"},
+  // === QUARTER FINALS (Jul 9-11) ===
+  {id:"97",home:"TBD",away:"TBD",datetime:"2026-07-09T23:00:00Z",group:"",stage:"Quarter Final"},
+  {id:"98",home:"TBD",away:"TBD",datetime:"2026-07-10T19:00:00Z",group:"",stage:"Quarter Final"},
+  {id:"99",home:"TBD",away:"TBD",datetime:"2026-07-10T22:00:00Z",group:"",stage:"Quarter Final"},
+  {id:"100",home:"TBD",away:"TBD",datetime:"2026-07-11T23:00:00Z",group:"",stage:"Quarter Final"},
+  // === SEMI FINALS (Jul 14-15) ===
+  {id:"101",home:"TBD",away:"TBD",datetime:"2026-07-14T23:00:00Z",group:"",stage:"Semi Final"},
+  {id:"102",home:"TBD",away:"TBD",datetime:"2026-07-15T23:00:00Z",group:"",stage:"Semi Final"},
+  // === 3RD PLACE (Jul 18) ===
+  {id:"103",home:"TBD",away:"TBD",datetime:"2026-07-18T23:00:00Z",group:"",stage:"3rd Place"},
+  // === FINAL (Jul 19) ===
+  {id:"104",home:"TBD",away:"TBD",datetime:"2026-07-19T19:00:00Z",group:"",stage:"Final"},
+].sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   const loadMatches = useCallback(async () => {
     try {
       // Use embedded fixture list for accuracy, fetch scores from football-data.org
@@ -801,7 +845,7 @@ const WC_FIXTURES = [
         }
         return m;
       });
-      setMatches(finalMatches);
+      setMatches([...finalMatches].sort((a,b) => new Date(a.datetime) - new Date(b.datetime)));
       setApiOk(true);
     } catch(e) { console.error(e); setApiOk(false); setMatches(WC_FIXTURES.map(f=>({...f,home_score:null,away_score:null,status:"scheduled"}))); }
     setLoading(false);
