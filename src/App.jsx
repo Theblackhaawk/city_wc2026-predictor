@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 const SUPABASE_URL = "https://nkqavfpbwdaqmzkcsufx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-zcCan8Yn75xr1RtVzNHPA_REQuFXwo";
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
-const SCORES_API = "https://api.football-data.org/v4/competitions/WC/matches";
-const FOOTBALL_API_KEY = "959ff529c0a2422aaa409ec33f21ea39";
+const SCORES_API = "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
+const FOOTBALL_API_KEY = "";
 const DEFAULT_RESET_PASSWORD = "1234";
  
 // ── Password hashing ───────────────────────────────────────────────────────────
@@ -105,32 +105,48 @@ function calcPoints(pred, match) {
 }
  
 // ── Match normalise ────────────────────────────────────────────────────────────
-function normalise(m) {
-  // football-data.org v4 format
-  // homeTeam.name can be null for undecided knockout matches
-  const home = m.homeTeam?.name || m.homeTeam?.shortName || m.homeTeam?.tla || "TBD";
-  const away = m.awayTeam?.name || m.awayTeam?.shortName || m.awayTeam?.tla || "TBD";
-  const dt = m.utcDate || m.datetime || m.date || "";
-  const rawStatus = (m.status || "").toUpperCase();
-  const done = ["FINISHED","COMPLETED"].includes(rawStatus);
-  const live = ["IN_PLAY","PAUSED","HALFTIME"].includes(rawStatus);
-  const hs = m.score?.fullTime?.home ?? null;
-  const as_ = m.score?.fullTime?.away ?? null;
-  const stage = m.stage || "GROUP_STAGE";
-  const group = m.group ? m.group.replace("GROUP_","") : "";
-  const stageLabel = stage === "GROUP_STAGE" ? "Group Stage"
-    : stage === "LAST_16" ? "Round of 16"
-    : stage === "QUARTER_FINALS" ? "Quarter Final"
-    : stage === "SEMI_FINALS" ? "Semi Final"
-    : stage === "FINAL" ? "Final"
-    : stage === "THIRD_PLACE" ? "3rd Place"
-    : stage;
+function normalise(m, idx) {
+  // openfootball format: { team1, team2, date, time, group, score: { ft: [h, a] }, round }
+  const home = m.team1 || "TBD";
+  const away = m.team2 || "TBD";
+  // Convert "13:00 UTC-6" to proper UTC ISO datetime
+  let dt = "";
+  if (m.date) {
+    if (m.time) {
+      const raw = m.time.trim();
+      const parts = raw.split(" ");
+      const localTime = parts[0]; // "13:00"
+      const offsetStr = parts[1] || "UTC+0"; // "UTC-6"
+      const offsetMatch = offsetStr.match(/UTC([+-]\d+)/);
+      const offset = offsetMatch ? parseInt(offsetMatch[1]) : 0;
+      const hh = parseInt(localTime.split(":")[0]);
+      const mm = parseInt(localTime.split(":")[1]);
+      let utcH = hh - offset;
+      if (utcH >= 24) utcH -= 24;
+      if (utcH < 0) utcH += 24;
+      dt = m.date + "T" + String(utcH).padStart(2,"0") + ":" + String(mm).padStart(2,"0") + ":00Z";
+    } else {
+      dt = m.date + "T00:00:00Z";
+    }
+  }
+  const hasScore = m.score && m.score.ft && m.score.ft.length === 2;
+  const hs = hasScore ? m.score.ft[0] : null;
+  const as_ = hasScore ? m.score.ft[1] : null;
+  const done = hasScore;
+  const group = m.group ? m.group.replace("Group ","") : "";
+  const round = m.round || "";
+  const stageLabel = round.includes("Round of 16") || round.includes("Last 16") ? "Round of 16"
+    : round.includes("Quarter") ? "Quarter Final"
+    : round.includes("Semi") ? "Semi Final"
+    : round.includes("Final") && !round.includes("Semi") && !round.includes("Third") ? "Final"
+    : round.includes("Third") || round.includes("3rd") ? "3rd Place"
+    : "Group Stage";
   return {
-    id: String(m.id),
+    id: String(idx + 1),
     home, away, datetime: dt,
     home_score: done ? hs : null,
     away_score: done ? as_ : null,
-    status: done ? "completed" : live ? "live" : "scheduled",
+    status: done ? "completed" : "scheduled",
     stage: stageLabel,
     group,
   };
@@ -145,7 +161,18 @@ function isPredOpen(dt) {
 function fmtTime(dt) {
   if (!dt) return "TBD";
   const d = new Date(dt);
-  return isNaN(d) ? dt : d.toLocaleString(undefined, { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" });
+  if (isNaN(d)) return dt;
+  // Convert to BDT (UTC+6)
+  const bdt = new Date(d.getTime() + 6 * 60 * 60 * 1000);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const month = months[bdt.getUTCMonth()];
+  const day = bdt.getUTCDate();
+  let hours = bdt.getUTCHours();
+  const minutes = String(bdt.getUTCMinutes()).padStart(2,"0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  return `${month} ${day}, ${hours}:${minutes} ${ampm} BDT`;
 }
 function countdownStr(dt) {
   if (!dt) return null;
@@ -315,15 +342,4 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 .ac-reset{background:#3d1515;color:#f87171}
 .ac-login_failed{background:#3d1515;color:#f87171}
 .ac-pw_change{background:#0f2d1a;color:#4ade80}
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px}
-.scard{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
-.scard-n{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--gold)}
-.scard-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.user-mgmt-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #ffffff06;font-size:12px}
-.user-mgmt-row:last-child{border-bottom:none}
- 
-/* Auth */
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#0d1a2e 0%,var(--bg) 60%);padding:24px}
-.auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:420px}
-.auth-logo{font-size:52px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(240,180,41,.5))}
-.aut
+.stat-grid{display:grid;grid-template-columns:repeat
