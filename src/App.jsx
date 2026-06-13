@@ -106,16 +106,16 @@ function calcPoints(pred, match) {
  
 // ── Match normalise ────────────────────────────────────────────────────────────
 function normalise(m) {
-  // Supports football-data.org v4 format
-  const home = m.homeTeam?.shortName || m.homeTeam?.name || m.home || "TBD";
-  const away = m.awayTeam?.shortName || m.awayTeam?.name || m.away || "TBD";
+  // football-data.org v4 format
+  // homeTeam.name can be null for undecided knockout matches
+  const home = m.homeTeam?.name || m.homeTeam?.shortName || m.homeTeam?.tla || "TBD";
+  const away = m.awayTeam?.name || m.awayTeam?.shortName || m.awayTeam?.tla || "TBD";
   const dt = m.utcDate || m.datetime || m.date || "";
-  const status = (m.status || "").toLowerCase();
-  const done = ["finished","completed","ft"].includes(status);
-  const live = ["in_play","paused","live","1h","2h","ht"].includes(status);
-  const hs = m.score?.fullTime?.home ?? m.score?.fullTime?.homeTeam ?? null;
-  const as_ = m.score?.fullTime?.away ?? m.score?.fullTime?.awayTeam ?? null;
-  // Extract group letter from stage e.g. "GROUP_STAGE" and matchday
+  const rawStatus = (m.status || "").toUpperCase();
+  const done = ["FINISHED","COMPLETED"].includes(rawStatus);
+  const live = ["IN_PLAY","PAUSED","HALFTIME"].includes(rawStatus);
+  const hs = m.score?.fullTime?.home ?? null;
+  const as_ = m.score?.fullTime?.away ?? null;
   const stage = m.stage || "GROUP_STAGE";
   const group = m.group ? m.group.replace("GROUP_","") : "";
   const stageLabel = stage === "GROUP_STAGE" ? "Group Stage"
@@ -325,4 +325,5 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 /* Auth */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#0d1a2e 0%,var(--bg) 60%);padding:24px}
 .auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:420px}
-.auth-logo{font-size:52px;text-align:center;margin
+.auth-logo{font-size:52px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(240,180,41,.5))}
+.aut
