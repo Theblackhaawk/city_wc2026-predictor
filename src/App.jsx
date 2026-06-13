@@ -274,12 +274,12 @@ function Auth({ onLogin }) {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-logo">⚽</div>
-        <div className="auth-title">WC 2026</div>
-        <div className="auth-sub">CITY BANK · OFFICE PREDICTION LEAGUE</div>
+        <div className="auth-logo"><img src="https://digitalhub.fifa.com/transform/a0c1ce4a-75c2-4b90-869a-7b93bfe56e6a/FIFA-World-Cup-2026-Official-Emblem" alt="FIFA WC 2026" style={{width:"100px",height:"auto",filter:"drop-shadow(0 0 20px rgba(240,180,41,.5))"}} onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="block"}} /><span style={{display:"none",fontSize:"52px"}}>🏆</span></div>
+        <div className="auth-title" style={{fontSize:"22px",letterSpacing:"1px"}}>World Cup Prediction Championship 2026</div>
+        <div className="auth-sub">CITY BANK · FINANCE DIVISION</div>
         <div className="field">
           <label>Employee ID</label>
-          <input value={empId} onChange={e => setEmpId(e.target.value)} placeholder="e.g. CB-10042"
+          <input value={empId} onChange={e => setEmpId(e.target.value)} placeholder="Your ID"
             onKeyDown={e => e.key === "Enter" && submit()} autoFocus />
         </div>
         {mode === "signup" && (
@@ -378,22 +378,34 @@ function MatchCard({ match, user, myPred, isAdmin, onScoreOverride, onToast }) {
       <div className="mcard-foot">
         {open && !isDone && (
           <div className="pred-ui">
-            <div className="out-btns">
-              {[["home","h",match.home.split(" ")[0]],["draw","d","Draw"],["away","a",match.away.split(" ")[0]]].map(([v,cls,lbl]) => (
-                <button key={v} className={`out-btn${outcome===v?` sel ${cls}`:""}`} onClick={() => { setOutcome(v); setSaved(false); }}>{lbl}</button>
-              ))}
-            </div>
-            <div className="score-inp-wrap">
-              <input className="sinp" type="number" min="0" max="20" value={hs} onChange={e => { setHs(e.target.value); setSaved(false); }} placeholder="0" />
+            <div style={{display:"flex",alignItems:"center",gap:8,flex:1,flexWrap:"wrap"}}>
+              <span style={{fontSize:12,fontWeight:700,color:"var(--text)"}}>{match.home}</span>
+              <input className="sinp" type="number" min="0" max="20" value={hs} onChange={e => {
+                setHs(e.target.value); setSaved(false);
+                const h = parseInt(e.target.value), a = parseInt(as);
+                if (!isNaN(h) && !isNaN(a)) setOutcome(h > a ? "home" : a > h ? "away" : "draw");
+                else setOutcome("");
+              }} placeholder="0" />
               <span className="sep">-</span>
-              <input className="sinp" type="number" min="0" max="20" value={as} onChange={e => { setAs(e.target.value); setSaved(false); }} placeholder="0" />
+              <input className="sinp" type="number" min="0" max="20" value={as} onChange={e => {
+                setAs(e.target.value); setSaved(false);
+                const h = parseInt(hs), a = parseInt(e.target.value);
+                if (!isNaN(h) && !isNaN(a)) setOutcome(h > a ? "home" : a > h ? "away" : "draw");
+                else setOutcome("");
+              }} placeholder="0" />
+              <span style={{fontSize:12,fontWeight:700,color:"var(--text)"}}>{match.away}</span>
+              {outcome && (
+                <span className={`out-btn sel ${outcome==="home"?"h":outcome==="away"?"a":"d"}`} style={{cursor:"default"}}>
+                  {outcome==="home"? `${match.home} Win` : outcome==="away"? `${match.away} Win` : "Draw"}
+                </span>
+              )}
             </div>
             <button className="btn btn-gold btn-sm" onClick={savePred} disabled={!outcome || saving}>
               {saving ? "..." : saved ? "✓ Saved" : "Save"}
             </button>
           </div>
         )}
-        {!open && !isDone && <div className="locked-msg">🔒 Predictions closed (15 min rule)</div>}
+        {!open && !isDone && <div className="locked-msg">🔒 Predictions closed</div>}
         {(isDone || !open) && myPred && (
           <div className="pred-existing">Your pick: <strong>{myPred.outcome === "home" ? match.home : myPred.outcome === "away" ? match.away : "Draw"}</strong> ({myPred.home_score ?? "?"}-{myPred.away_score ?? "?"})</div>
         )}
@@ -907,7 +919,7 @@ const WC_FIXTURES = [
         <div className="hdr-inner">
           <div className="logo">
             <span className="logo-ball">⚽</span>
-            <div><div className="logo-text">WC 2026 PREDICTOR</div><div className="logo-sub">City Bank Office League</div></div>
+            <div><div className="logo-text">WC 2026 PREDICTOR</div><div className="logo-sub">Finance Division · WC 2026</div></div>
           </div>
           <div className="hdr-right">
             <div className="nav-tabs">
@@ -926,7 +938,7 @@ const WC_FIXTURES = [
 
       <div className="hero">
         <div className="hero-title">⚽ FIFA World Cup 2026 ⚽</div>
-        <div className="hero-sub">June 11 – July 19 · USA · Canada · Mexico · 48 Teams · 104 Matches</div>
+        <div className="hero-sub">June 11 – July 19 · 48 Teams · 104 Matches</div><div className="hero-sub" style={{fontSize:11,marginTop:4,color:"var(--muted)"}}>🏟️ Hosted in USA, Canada &amp; Mexico</div>
         <div className="hero-stats">
           {[["Matches",matches.length],["Live",live.length],["Done",completed.length],["Players",allUsers.length],["My Pts",myPts]].map(([l,v]) => (
             <div key={l} className="hstat"><div className="hstat-n">{v}</div><div className="hstat-l">{l}</div></div>
