@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import "./App.css";
  
 // ── Config ─────────────────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://nkqavfpbwdaqmzkcsufx.supabase.co";
@@ -191,155 +192,226 @@ function timeAgo(dt) {
   return `${Math.floor(h / 24)}d ago`;
 }
  
-// ══════════════════════════════════════════════════════════════════════════════
-// CSS
-// ══════════════════════════════════════════════════════════════════════════════
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#07090f;--surface:#0e1420;--card:#121a28;
-  --border:#1c2a3e;--border2:#243348;
-  --gold:#f0b429;--gold2:#d4920a;--gold-dim:#f0b42922;
-  --green:#22c55e;--green-dim:#22c55e22;
-  --red:#ef4444;--red-dim:#ef444422;
-  --muted:#4a6080;--muted2:#6b8aaa;
-  --text:#dde6f0;--white:#fff;
+ 
+// ── Toast ──────────────────────────────────────────────────────────────────────
+function Toast({ msg, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 2500); return () => clearTimeout(t); }, []);
+  return <div className="toast">{msg}</div>;
 }
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
-.app{min-height:100vh;display:flex;flex-direction:column}
  
-/* Header */
-.hdr{background:linear-gradient(180deg,#0c1322 0%,#080d18 100%);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200}
-.hdr-inner{max-width:1200px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-ball{font-size:26px;animation:float 3s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.logo-text{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--gold);letter-spacing:1.5px;line-height:1.1}
-.logo-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
-.hdr-right{display:flex;align-items:center;gap:10px}
-.user-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:4px 12px 4px 4px}
-.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000}
-.user-name{font-size:13px;font-weight:600;color:var(--text)}
-.user-pts{font-size:10px;color:var(--gold);font-weight:700}
+// ══════════════════════════════════════════════════════════════════════════════
+// FORCE PASSWORD CHANGE SCREEN
+// ══════════════════════════════════════════════════════════════════════════════
+function ForcePasswordChange({ user, onDone }) {
+  const [pw, setPw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
  
-/* Buttons */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Inter',sans-serif;white-space:nowrap}
-.btn-gold{background:var(--gold);color:#000}.btn-gold:hover{background:var(--gold2)}
-.btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
-.btn-red{background:#2d0a0a;color:#f87171;border:1px solid #5c1414}.btn-red:hover{background:#3d1010}
-.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
-.btn:disabled{opacity:.4;cursor:not-allowed}
+  async function submit() {
+    setErr("");
+    if (pw.length < 4) { setErr("Password must be at least 4 characters."); return; }
+    if (pw === DEFAULT_RESET_PASSWORD) { setErr("Please choose a different password than the default."); return; }
+    if (pw !== confirm) { setErr("Passwords don't match."); return; }
+    setLoading(true);
+    try {
+      const hash = await hashPassword(pw);
+      await sb.patch("users", `emp_id=eq.${user.empId}`, { password_hash: hash });
+      await audit(user.empId, "pw_change", "Changed password after reset");
+      onDone();
+    } catch { setErr("Something went wrong. Please try again."); }
+    setLoading(false);
+  }
  
-/* Nav */
-.nav-tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px}
-.nav-tab{padding:6px 14px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
-.nav-tab.active{background:var(--gold);color:#000}
-.nav-tab:not(.active):hover{color:var(--text)}
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <div className="auth-logo">🔑</div>
+        <div className="auth-title">Set New Password</div>
+        <div className="auth-sub">Your password was reset by admin. Please set a new one to continue.</div>
+        <div className="info-box">⚠️ You cannot use <strong>1234</strong> as your password. Choose something personal.</div>
+        <div className="field">
+          <label>New Password (min. 4 characters)</label>
+          <div className="pw-wrap">
+            <input type={showPw ? "text" : "password"} value={pw}
+              onChange={e => setPw(e.target.value)} placeholder="Enter new password"
+              onKeyDown={e => e.key === "Enter" && submit()} autoFocus />
+            <button className="pw-eye" onClick={() => setShowPw(p => !p)} type="button">{showPw ? "🙈" : "👁️"}</button>
+          </div>
+        </div>
+        <div className="field">
+          <label>Confirm Password</label>
+          <div className="pw-wrap">
+            <input type={showPw ? "text" : "password"} value={confirm}
+              onChange={e => setConfirm(e.target.value)} placeholder="Repeat password"
+              onKeyDown={e => e.key === "Enter" && submit()} />
+          </div>
+          {confirm && pw !== confirm && <div style={{fontSize:11,color:"var(--red)",marginTop:3}}>Passwords don't match</div>}
+          {confirm && pw === confirm && pw.length >= 4 && <div style={{fontSize:11,color:"var(--green)",marginTop:3}}>✓ Passwords match</div>}
+        </div>
+        {err && <div className="err-box">⚠️ {err}</div>}
+        <button className="auth-submit" onClick={submit} disabled={loading}>
+          {loading ? "⏳ Saving..." : "SET PASSWORD & CONTINUE"}
+        </button>
+      </div>
+    </div>
+  );
+}
  
-/* Hero */
-.hero{background:linear-gradient(180deg,#0d1a2e 0%,var(--bg) 100%);padding:28px 20px 20px;border-bottom:1px solid var(--border);text-align:center}
-.hero-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(28px,5vw,52px);color:var(--gold);letter-spacing:3px;text-transform:uppercase;line-height:1;text-shadow:0 0 40px rgba(240,180,41,.3)}
-.hero-sub{color:var(--muted2);font-size:13px;margin-top:6px}
-.hero-stats{display:flex;justify-content:center;gap:24px;margin-top:20px;flex-wrap:wrap}
-.hstat{text-align:center;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:80px}
-.hstat-n{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;color:var(--gold)}
-.hstat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════════════════════
+function Auth({ onLogin }) {
+  const [mode, setMode] = useState("login");
+  const [empId, setEmpId] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
  
-/* Main */
-.main{max-width:1200px;margin:0 auto;padding:20px;width:100%;flex:1}
-.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
-.page-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:var(--text);letter-spacing:1px;text-transform:uppercase}
+  function reset() { setErr(""); setPassword(""); setConfirmPw(""); setName(""); }
  
-/* Filters */
-.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.filt{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
-.filt.active{background:var(--gold);color:#000;border-color:var(--gold)}
-.filt:not(.active):hover{color:var(--text);border-color:var(--border2)}
+  async function submit() {
+    setErr(""); setLoading(true);
+    const id = empId.trim().toUpperCase();
+    if (!id) { setErr("Employee ID is required."); setLoading(false); return; }
+    if (!password) { setErr("Password is required."); setLoading(false); return; }
+    try {
+      if (mode === "signup") {
+        if (!name.trim()) { setErr("Full name is required."); setLoading(false); return; }
+        if (password.length < 4) { setErr("Password must be at least 4 characters."); setLoading(false); return; }
+        if (password !== confirmPw) { setErr("Passwords don't match."); setLoading(false); return; }
+        const existing = await sb.get("users", `emp_id=eq.${id}`);
+        if (existing.length > 0) { setErr("This Employee ID is already registered."); setLoading(false); return; }
+        const deviceId = getDeviceId();
+        const devCheck = await sb.get("sessions", `device_id=eq.${deviceId}&select=emp_id`);
+        if (devCheck.length > 0 && devCheck[0].emp_id !== id) {
+          setErr(`This device is already registered to another employee (${devCheck[0].emp_id}).`);
+          setLoading(false); return;
+        }
+        const hash = await hashPassword(password);
+        await sb.post("users", { emp_id: id, name: name.trim(), password_hash: hash });
+        await sb.post("sessions", { emp_id: id, device_id: deviceId, fingerprint: getFingerprint(), user_agent: navigator.userAgent });
+        await audit(id, "signup", `New registration: ${name.trim()}`);
+        setSession({ empId: id, name: name.trim() });
+        onLogin({ empId: id, name: name.trim(), needsPwChange: false });
+      } else {
+        const rows = await sb.get("users", `emp_id=eq.${id}`);
+        if (rows.length === 0) { setErr("Employee ID not found. Please sign up first."); setLoading(false); return; }
+        const hash = await hashPassword(password);
+        if (rows[0].password_hash !== hash) {
+          await audit(id, "login_failed", `Wrong password — ${parseUA(navigator.userAgent)}`);
+          setErr("Incorrect password."); setLoading(false); return;
+        }
+        const deviceId = getDeviceId();
+        await sb.post("sessions", { emp_id: id, device_id: deviceId, fingerprint: getFingerprint(), user_agent: navigator.userAgent });
+        await audit(id, "login", `Signed in — ${parseUA(navigator.userAgent)} / ${parseBrowser(navigator.userAgent)}`);
+        const needsPwChange = password === DEFAULT_RESET_PASSWORD;
+        setSession({ empId: id, name: rows[0].name });
+        onLogin({ empId: id, name: rows[0].name, needsPwChange });
+      }
+    } catch (e) { setErr("Something went wrong. Please try again."); console.error(e); }
+    setLoading(false);
+  }
  
-/* API bar */
-.api-bar{display:flex;align-items:center;gap:6px;font-size:11px;padding:6px 12px;border-radius:6px;margin-bottom:12px;border:1px solid var(--border);background:var(--surface);color:var(--muted2)}
-.api-bar.err{border-color:#5c1414;background:#1a0808;color:#f87171}
-.api-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
-.api-dot.off{background:var(--red)}
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <div className="auth-logo">⚽</div>
+        <div className="auth-title">WC 2026</div>
+        <div className="auth-sub">CITY BANK · OFFICE PREDICTION LEAGUE</div>
+        <div className="field">
+          <label>Employee ID</label>
+          <input value={empId} onChange={e => setEmpId(e.target.value)} placeholder="e.g. CB-10042"
+            onKeyDown={e => e.key === "Enter" && submit()} autoFocus />
+        </div>
+        {mode === "signup" && (
+          <div className="field">
+            <label>Full Name</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name"
+              onKeyDown={e => e.key === "Enter" && submit()} />
+          </div>
+        )}
+        <div className="field">
+          <label>Password {mode === "signup" ? "(min. 4 characters)" : ""}</label>
+          <div className="pw-wrap">
+            <input type={showPw ? "text" : "password"} value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder={mode === "signup" ? "Create a password" : "Your password"}
+              onKeyDown={e => e.key === "Enter" && submit()} />
+            <button className="pw-eye" onClick={() => setShowPw(p => !p)} type="button">{showPw ? "🙈" : "👁️"}</button>
+          </div>
+        </div>
+        {mode === "signup" && (
+          <div className="field">
+            <label>Confirm Password</label>
+            <div className="pw-wrap">
+              <input type={showPw ? "text" : "password"} value={confirmPw}
+                onChange={e => setConfirmPw(e.target.value)} placeholder="Repeat password"
+                onKeyDown={e => e.key === "Enter" && submit()} />
+            </div>
+            {confirmPw && password !== confirmPw && <div style={{fontSize:11,color:"var(--red)",marginTop:3}}>Passwords don't match</div>}
+            {confirmPw && password === confirmPw && <div style={{fontSize:11,color:"var(--green)",marginTop:3}}>✓ Passwords match</div>}
+          </div>
+        )}
+        {err && <div className="err-box">⚠️ {err}</div>}
+        <button className="auth-submit" onClick={submit} disabled={loading}>
+          {loading ? "⏳ Please wait..." : mode === "signup" ? "CREATE ACCOUNT" : "SIGN IN"}
+        </button>
+        <div className="auth-toggle">
+          {mode === "login"
+            ? <>First time? <span onClick={() => { setMode("signup"); reset(); }}>Create account</span></>
+            : <>Already registered? <span onClick={() => { setMode("login"); reset(); }}>Sign in</span></>}
+        </div>
+      </div>
+    </div>
+  );
+}
  
-/* Match cards */
-.matches{display:flex;flex-direction:column;gap:10px}
-.mcard{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s}
-.mcard:hover{border-color:var(--border2)}
-.mcard.live{border-color:var(--green);box-shadow:0 0 20px var(--green-dim)}
-.mcard.done{opacity:.85}
-.mcard-top{display:flex;align-items:center;justify-content:space-between;padding:5px 14px;background:#080d18;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.live-pill{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-weight:700}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.4s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.mcard-body{display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:8px;padding:14px 16px}
-.team{display:flex;flex-direction:column;align-items:center;gap:5px}
-.team-r{align-items:flex-end}
-.tflag{font-size:34px;line-height:1}
-.tname{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-align:center;color:var(--text)}
-.scorebox{text-align:center}
-.score-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;color:var(--gold);letter-spacing:6px;line-height:1}
-.score-vs{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--muted);letter-spacing:2px}
-.score-lbl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:1px}
-.cd-badge{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-dim)}
-.cd-badge.warn{background:var(--red-dim);color:var(--red);border-color:var(--red-dim)}
-.mcard-foot{border-top:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:48px}
+// ══════════════════════════════════════════════════════════════════════════════
+// MATCH CARD
+// ══════════════════════════════════════════════════════════════════════════════
+function MatchCard({ match, user, myPred, isAdmin, onScoreOverride, onToast }) {
+  const [outcome, setOutcome] = useState(myPred?.outcome || "");
+  const [hs, setHs] = useState(myPred?.home_score ?? "");
+  const [as, setAs] = useState(myPred?.away_score ?? "");
+  const [saved, setSaved] = useState(!!myPred);
+  const [saving, setSaving] = useState(false);
+  const [oHs, setOHs] = useState(match.home_score ?? "");
+  const [oAs, setOAs] = useState(match.away_score ?? "");
+  const open = isPredOpen(match.datetime);
+  const isLive = match.status === "live";
+  const isDone = match.status === "completed";
+  const cd = countdownStr(match.datetime);
+  const closingSoon = cd && !cd.includes("h") && parseInt(cd) <= 30;
+  const pts = isDone && myPred ? calcPoints(myPred, match) : null;
  
-/* Prediction */
-.pred-ui{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.out-btns{display:flex;gap:3px}
-.out-btn{padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:11px;font-weight:700;cursor:pointer;transition:all .13s;font-family:'Inter',sans-serif}
-.out-btn.sel.h{background:#1a3460;color:#60a5fa;border-color:#3b82f6}
-.out-btn.sel.d{background:#2d2410;color:#fbbf24;border-color:#f59e0b}
-.out-btn.sel.a{background:#0f2d1a;color:#4ade80;border-color:#22c55e}
-.score-inp-wrap{display:flex;align-items:center;gap:4px}
-.sinp{width:34px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:4px 2px;font-size:14px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
-.sinp:focus{outline:none;border-color:var(--gold)}
-.sep{color:var(--muted);font-weight:700;font-size:13px}
-.locked-msg{font-size:11px;color:var(--red);font-weight:500}
-.pred-existing{font-size:12px;color:var(--muted2)}
-.pts-chip{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:12px;font-size:12px;font-weight:700}
-.pts-2{background:#0f3320;color:#4ade80;border:1px solid #166534}
-.pts-1{background:#2a2000;color:#fbbf24;border:1px solid #854d0e}
-.pts-0{background:#1a1a1a;color:var(--muted);border:1px solid var(--border)}
+  async function savePred() {
+    if (!outcome) return;
+    setSaving(true);
+    try {
+      await sb.upsert("predictions", { emp_id: user.empId, match_id: match.id, outcome, home_score: hs === "" ? null : parseInt(hs), away_score: as === "" ? null : parseInt(as) });
+      await audit(user.empId, "prediction", `${match.home} vs ${match.away} → ${outcome} (${hs}-${as})`);
+      setSaved(true); onToast("✓ Prediction saved!");
+    } catch { onToast("❌ Failed to save"); }
+    setSaving(false);
+  }
  
-/* Leaderboard */
-.lb{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.lb-hd{padding:12px 18px;background:#080d18;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.lb-row{display:grid;grid-template-columns:48px 1fr auto auto;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid #ffffff08;transition:background .15s}
-.lb-row:hover{background:#ffffff04}
-.lb-row:last-child{border-bottom:none}
-.lb-row.me{background:linear-gradient(90deg,var(--gold-dim),transparent);border-left:3px solid var(--gold)}
-.rank-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;text-align:center;color:var(--muted)}
-.rank-num.r1{color:#f5c842}.rank-num.r2{color:#94a3b8}.rank-num.r3{color:#c07d3a}
-.lb-name{font-weight:600;font-size:14px;color:var(--text)}
-.lb-empid{font-size:11px;color:var(--muted);margin-top:1px}
-.lb-pts-n{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:24px;color:var(--gold)}
-.lb-picks{font-size:11px;color:var(--muted);text-align:right}
- 
-/* Admin */
-.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:800px){.admin-grid{grid-template-columns:1fr}}
-.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.panel-hd{padding:12px 16px;background:#080d18;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px;color:var(--gold);text-transform:uppercase}
-.panel-body{max-height:480px;overflow-y:auto}
-.log-row{display:flex;align-items:flex-start;gap:10px;padding:8px 14px;border-bottom:1px solid #ffffff06;font-size:12px}
-.log-row:last-child{border-bottom:none}
-.log-emp{font-weight:700;color:var(--text);min-width:90px;flex-shrink:0}
-.log-action{color:var(--muted2);flex:1}
-.log-time{color:var(--muted);flex-shrink:0;font-size:10px}
-.dev-row{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 14px;border-bottom:1px solid #ffffff06;font-size:12px}
-.dev-row:last-child{border-bottom:none}
-.dev-emp{font-weight:700;color:var(--text)}
-.dev-info{color:var(--muted2);font-size:11px;margin-top:2px}
-.dev-time{color:var(--muted);font-size:10px;text-align:right}
-.ac{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;margin-right:4px}
-.ac-login{background:#1a3460;color:#60a5fa}
-.ac-prediction{background:#0f2d1a;color:#4ade80}
-.ac-signup{background:#2d1f00;color:#fbbf24}
-.ac-score{background:#2d0a2d;color:#c084fc}
-.ac-reset{background:#3d1515;color:#f87171}
-.ac-login_failed{background:#3d1515;color:#f87171}
-.ac-pw_change{background:#0f2d1a;color:#4ade80}
-.stat-grid{display:grid;grid-template-columns:repeat
+  return (
+    <div className={`mcard${isLive ? " live" : isDone ? " done" : ""}`}>
+      <div className="mcard-top">
+        <span>
+          {isLive && <span className="live-pill"><span className="pulse" />LIVE</span>}
+          {!isLive && (isDone ? "FULL TIME" : (match.stage || "Group Stage"))}
+          {match.group ? ` · Group ${match.group}` : ""}
+        </span>
+        <span>{fmtTime(match.datetime)}</span>
+      </div>
+      <div className="mcard-body">
+        <div className="team"><div className="tflag">{flag(match.home)}</div><div className="tname">{match.home}</div></div>
+        <div className="scorebox">
+          {(isLive || isDone) && match.home_score != null
+            ? <div className="score-num">{match.home_score}<span style={{color:"var(--m
