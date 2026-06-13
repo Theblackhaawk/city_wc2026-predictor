@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 const SUPABASE_URL = "https://nkqavfpbwdaqmzkcsufx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-zcCan8Yn75xr1RtVzNHPA_REQuFXwo";
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
-const SCORES_API = "https://worldcup26.ir/get/games";
+const SCORES_API = "https://api.football-data.org/v4/competitions/WC/matches";
+const FOOTBALL_API_KEY = "959ff529c0a2422aaa409ec33f21ea39";
 const DEFAULT_RESET_PASSWORD = "1234";
  
 // ── Password hashing ───────────────────────────────────────────────────────────
@@ -105,20 +106,33 @@ function calcPoints(pred, match) {
  
 // ── Match normalise ────────────────────────────────────────────────────────────
 function normalise(m) {
-  const home = m.homeTeam?.name || m.home_team?.name || m.home || "TBD";
-  const away = m.awayTeam?.name || m.away_team?.name || m.away || "TBD";
-  const dt = m.datetime || m.kickoff_utc || m.date || "";
+  // Supports football-data.org v4 format
+  const home = m.homeTeam?.shortName || m.homeTeam?.name || m.home || "TBD";
+  const away = m.awayTeam?.shortName || m.awayTeam?.name || m.away || "TBD";
+  const dt = m.utcDate || m.datetime || m.date || "";
   const status = (m.status || "").toLowerCase();
-  const done = ["completed","finished","ft","full-time"].includes(status);
-  const live = ["live","1h","2h","ht","in progress","inprogress"].includes(status);
+  const done = ["finished","completed","ft"].includes(status);
+  const live = ["in_play","paused","live","1h","2h","ht"].includes(status);
+  const hs = m.score?.fullTime?.home ?? m.score?.fullTime?.homeTeam ?? null;
+  const as_ = m.score?.fullTime?.away ?? m.score?.fullTime?.awayTeam ?? null;
+  // Extract group letter from stage e.g. "GROUP_STAGE" and matchday
+  const stage = m.stage || "GROUP_STAGE";
+  const group = m.group ? m.group.replace("GROUP_","") : "";
+  const stageLabel = stage === "GROUP_STAGE" ? "Group Stage"
+    : stage === "LAST_16" ? "Round of 16"
+    : stage === "QUARTER_FINALS" ? "Quarter Final"
+    : stage === "SEMI_FINALS" ? "Semi Final"
+    : stage === "FINAL" ? "Final"
+    : stage === "THIRD_PLACE" ? "3rd Place"
+    : stage;
   return {
-    id: String(m.id || m.matchNumber || m.match_number),
+    id: String(m.id),
     home, away, datetime: dt,
-    home_score: done ? (m.homeScore ?? m.home_score ?? null) : null,
-    away_score: done ? (m.awayScore ?? m.away_score ?? null) : null,
+    home_score: done ? hs : null,
+    away_score: done ? as_ : null,
     status: done ? "completed" : live ? "live" : "scheduled",
-    stage: m.stage || m.round || "Group Stage",
-    group: m.group || m.group_name || "",
+    stage: stageLabel,
+    group,
   };
 }
  
@@ -311,9 +325,4 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 /* Auth */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#0d1a2e 0%,var(--bg) 60%);padding:24px}
 .auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:420px}
-.auth-logo{font-size:52px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(240,180,41,.5))}
-.auth-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:30px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;text-align:center}
-.auth-sub{font-size:12px;color:var(--muted);text-align:center;margin-top:4px;margin-bottom:28px}
-.field{margin-bottom:14px}
-.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-.field input{width:100%;background:var(--surface);border:1px solid var(--bor
+.auth-logo{font-size:52px;text-align:center;margin
