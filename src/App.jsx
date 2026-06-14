@@ -77,21 +77,26 @@ async function audit(empId, action, detail = "") {
 }
 
 // ── Flags ──────────────────────────────────────────────────────────────────────
-const FLAGS = {
-  "Mexico":"🇲🇽","USA":"🇺🇸","United States":"🇺🇸","Canada":"🇨🇦","Argentina":"🇦🇷",
-  "Brazil":"🇧🇷","France":"🇫🇷","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Germany":"🇩🇪","Spain":"🇪🇸",
-  "Portugal":"🇵🇹","Netherlands":"🇳🇱","Belgium":"🇧🇪","Italy":"🇮🇹","Croatia":"🇭🇷",
-  "Morocco":"🇲🇦","Japan":"🇯🇵","South Korea":"🇰🇷","Australia":"🇦🇺","Senegal":"🇸🇳",
-  "Ghana":"🇬🇭","Nigeria":"🇳🇬","Algeria":"🇩🇿","Egypt":"🇪🇬","Saudi Arabia":"🇸🇦",
-  "Iran":"🇮🇷","Qatar":"🇶🇦","Poland":"🇵🇱","Serbia":"🇷🇸","Switzerland":"🇨🇭",
-  "Denmark":"🇩🇰","Sweden":"🇸🇪","Norway":"🇳🇴","Austria":"🇦🇹","Türkiye":"🇹🇷",
-  "Scotland":"🏴󠁧󠁢󠁳󠁣󠁴󠁿","Uruguay":"🇺🇾","Colombia":"🇨🇴","Ecuador":"🇪🇨",
-  "Venezuela":"🇻🇪","Peru":"🇵🇾","Panama":"🇵🇦","Costa Rica":"🇨🇷","Jamaica":"🇯🇲",
-  "Côte d'Ivoire":"🇨🇮","Tunisia":"🇹🇳","South Africa":"🇿🇦","Congo DR":"🇨🇩",
-  "Iraq":"🇮🇶","Jordan":"🇯🇴","Uzbekistan":"🇺🇿","New Zealand":"🇳🇿",
-  "Bosnia and Herzegovina":"🇧🇦","Czechia":"🇨🇿","Cape Verde":"🇨🇻",
+const FLAG_CODES = {
+  "Mexico":"mx","USA":"us","United States":"us","Canada":"ca","Argentina":"ar",
+  "Brazil":"br","France":"fr","England":"gb-eng","Germany":"de","Spain":"es",
+  "Portugal":"pt","Netherlands":"nl","Belgium":"be","Italy":"it","Croatia":"hr",
+  "Morocco":"ma","Japan":"jp","South Korea":"kr","Australia":"au","Senegal":"sn",
+  "Ghana":"gh","Nigeria":"ng","Algeria":"dz","Egypt":"eg","Saudi Arabia":"sa",
+  "Iran":"ir","Qatar":"qa","Poland":"pl","Serbia":"rs","Switzerland":"ch",
+  "Denmark":"dk","Sweden":"se","Norway":"no","Austria":"at","Türkiye":"tr",
+  "Scotland":"gb-sct","Uruguay":"uy","Colombia":"co","Ecuador":"ec",
+  "Venezuela":"ve","Peru":"pe","Panama":"pa","Costa Rica":"cr","Jamaica":"jm",
+  "Côte d'Ivoire":"ci","Ivory Coast":"ci","Tunisia":"tn","South Africa":"za","Congo DR":"cd","DR Congo":"cd",
+  "Iraq":"iq","Jordan":"jo","Uzbekistan":"uz","New Zealand":"nz",
+  "Bosnia and Herzegovina":"ba","Czechia":"cz","Cape Verde":"cv",
+  "Haiti":"ht","Curaçao":"cw","Paraguay":"py","New Zealand":"nz",
 };
-const flag = (n) => FLAGS[n] || "🏳️";
+const flag = (n) => {
+  const code = FLAG_CODES[n];
+  if (!code) return <span style={{fontSize:"1.8em"}}>🏳️</span>;
+  return <img src={`https://flagcdn.com/w40/${code}.png`} srcSet={`https://flagcdn.com/w80/${code}.png 2x`} width="40" height="27" alt={n} style={{borderRadius:"3px",objectFit:"cover",display:"block"}} />;
+};
 
 // ── Scoring ────────────────────────────────────────────────────────────────────
 function scoreOutcome(h, a) { return h > a ? "home" : a > h ? "away" : "draw"; }
